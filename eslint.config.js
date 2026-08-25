@@ -14,17 +14,25 @@ export default [
       'node_modules',
       'playwright-report',
       'vite.config.ts',
+      'vite.config.js',
       'playwright.config.js',
     ],
   },
   {
-    files: ['vite.config.js'],
+    files: ['vite.config.ts'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
+      parser: tsParser,
       globals: {
         ...globals.node,
       },
+    },
+    plugins: {
+      '@typescript-eslint': ts,
+    },
+    rules: {
+      ...ts.configs.recommended.rules,
     },
   },
   js.configs.recommended,
@@ -80,3 +88,4 @@ export default [
     },
   },
 ];
+

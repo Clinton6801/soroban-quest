@@ -1,4 +1,4 @@
-# Japanese (ja) i18n Translations for 17 Missions
+                                                                                                                                                                                                                                                                                                                                                                                                                                # Japanese (ja) i18n Translations for 17 Missions
 
 This document provides str_replace commands for adding Japanese translations to missions 3-19 in `src/data/missions.js`.
 
