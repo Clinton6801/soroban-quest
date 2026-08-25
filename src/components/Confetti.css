@@ -43,6 +43,10 @@
 
 /* Respect user's motion preferences */
 @media (prefers-reduced-motion: reduce) {
+  .confetti-container {
+    display: none;
+  }
+
   .confetti-piece {
     animation: none;
     opacity: 0;

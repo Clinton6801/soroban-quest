@@ -8,8 +8,15 @@ function randomBetween(min, max) {
   return Math.random() * (max - min) + min;
 }
 
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 export default function Confetti({ count = 60, duration = 3000 }) {
+  const reducedMotion = useMemo(() => prefersReducedMotion(), []);
+
   const pieces = useMemo(() => {
+    if (reducedMotion) return [];
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: randomBetween(0, 100),
@@ -20,7 +27,9 @@ export default function Confetti({ count = 60, duration = 3000 }) {
       delay: randomBetween(0, duration / 1000),
       fallDuration: randomBetween(1.5, 3.5),
     }));
-  }, [count, duration]);
+  }, [count, duration, reducedMotion]);
+
+  if (reducedMotion) return null;
 
   return (
     <div className="confetti-container" aria-hidden="true">
