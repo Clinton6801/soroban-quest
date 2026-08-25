@@ -2062,16 +2062,6 @@ a:focus:not(:focus-visible),
 
 /* ============ REDUCED MOTION ============ */
 @media (prefers-reduced-motion: reduce) {
-  /* Kill all animations, transitions, and scrolling physics globally */
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
   /* Hero entrance — snap to final visible state */
   .hero-badge,
   .hero-title,
@@ -2152,11 +2142,6 @@ a:focus:not(:focus-visible),
   .profile-selector-card.active,
   .btn-confirm:hover {
     transform: none;
-  }
-
-  /* Hero starfield canvas */
-  .hero-particles {
-    display: none;
   }
 }
 
