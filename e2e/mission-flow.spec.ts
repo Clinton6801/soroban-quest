@@ -269,9 +269,13 @@ test.describe('Mission Gameplay Flow — Complete Tests', () => {
     const runTestsBtn = page.locator('button:has-text("Run Tests")').first();
     await runTestsBtn.click({ force: true });
 
-    // Wait for completion
+    // Wait for completion & progress save
     await waitForTestResults(page);
+<<<<<<< HEAD
     await waitForConfetti(page);
+=======
+    await page.waitForTimeout(1500);
+>>>>>>> 684f7d3 (fix(e2e): resolve E2E test failures, strict mode assertions, and lint warnings)
 
     // Check localStorage for XP increase
     const progress = await getMissionProgressFromStorage(page);
@@ -421,7 +425,8 @@ test.describe('Mission Gameplay Flow — Complete Tests', () => {
     await runTestsBtn.click({ force: true });
 
     await waitForTestResults(page);
-    await expect(page.locator('.mission-detail, .terminal-line').first()).toBeVisible();
+    const passed = page.locator('.terminal-line.pass');
+    await expect(passed.first()).toBeVisible();
   });
 
   test('Scenario 10: Should complete mission on mobile viewport (375x667)', async ({ page }) => {
@@ -450,7 +455,8 @@ test.describe('Mission Gameplay Flow — Complete Tests', () => {
     await runTestsBtn.click({ force: true });
 
     await waitForTestResults(page);
-    await expect(page.locator('.mission-detail, .terminal-line').first()).toBeVisible();
+    const passed = page.locator('.terminal-line.pass');
+    await expect(passed.first()).toBeVisible();
   });
 
   // ═══════════════════════════════════════════════════════════════════════════════
