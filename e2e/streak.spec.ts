@@ -39,7 +39,7 @@ test.describe('Streak System', () => {
     });
 
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.goto('/#/journal');
     await expect(page.locator('.summary-stat').nth(4).locator('.summary-stat-value')).toHaveText('5');
   });
 });

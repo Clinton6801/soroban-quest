@@ -13,6 +13,7 @@ import { updateStreak } from './systems/gameEngine';
 import { scheduleCloudSync } from './systems/cloudSync';
 import { useKeyboardShortcuts } from './systems/useKeyboardShortcuts';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
+import { scheduleCloudSync } from './systems/cloudSync';
 import './systems/Toast.css';
 
 // Lazy load page components

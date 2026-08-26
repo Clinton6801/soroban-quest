@@ -55,7 +55,7 @@ test.describe('Mission Flow', () => {
     });
 
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.goto('/#/journal');
     await expect(page.locator('.summary-stat').nth(3)).toContainText('100');
   });
 
