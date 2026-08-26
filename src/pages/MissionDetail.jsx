@@ -149,6 +149,7 @@ export default function MissionDetail() {
     if (isRunning || !mission) return;
     setIsRunning(true);
     setTestResults([]);
+    setActiveTab("tests");
 
     let state = loadProgress();
     state = recordAttempt(state, missionId);
@@ -204,6 +205,7 @@ export default function MissionDetail() {
     if (isCompiling || isRunning || !mission) return;
     setIsCompiling(true);
     setTestResults([]);
+    setActiveTab("tests");
     clearCompileMarkers();
 
     const collector = [];

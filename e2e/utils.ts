@@ -7,6 +7,7 @@ const fixtureDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url
 
 export async function clearLocalStorageBeforePageLoad(page: Page) {
   await page.goto('/');
+  await page.waitForLoadState('load');
   await page.evaluate(() => {
     localStorage.clear();
     localStorage.setItem('sorobanQuest_onboarding_done', '1');
@@ -51,31 +52,62 @@ export async function maskDynamicElements(page: Page) {
 }
 
 export async function waitForMonaco(page: Page) {
-  const editor = page.locator('.monaco-editor textarea, .monaco-editor');
+  // Wait for Monaco editor container
+  const editor = page.locator('.monaco-editor');
   await expect(editor.first()).toBeVisible({ timeout: 20000 });
+  // Wait for the loading skeleton to disappear (MissionDetail has a 1.5s loading state)
+  await page.locator('.mission-detail-skeleton, .loading').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(500);
 }
 
 export async function fillMonacoEditor(page: Page, content: string) {
-  // Wait for Monaco editor to load
   await waitForMonaco(page);
 
-  // Try to focus the editor by clicking on it directly
-  const editorHost = page.locator('.monaco-editor').first();
-  await editorHost.click({ position: { x: 200, y: 100 }, force: true });
+  // Use page.evaluate to access the editor instance set on window
+  const filled = await page.evaluate((text) => {
+    const editor = (window as any).__MONACO_EDITOR__;
+    if (editor && typeof editor.setValue === 'function') {
+      editor.setValue(text);
+      return true;
+    }
+    const monacoNs = (window as any).monaco;
+    if (monacoNs?.editor?.getEditors) {
+      const editors = monacoNs.editor.getEditors();
+      if (editors && editors.length > 0) {
+        editors[0].setValue(text);
+        return true;
+      }
+    }
+    if (monacoNs?.editor?.getModels) {
+      const models = monacoNs.editor.getModels();
+      if (models && models.length > 0) {
+        models[0].setValue(text);
+        return true;
+      }
+    }
+    return false;
+  }, content);
 
-  // Wait a moment for focus
+  if (!filled) {
+    const editorHost = page.locator('.monaco-editor').first();
+    await editorHost.click({ position: { x: 200, y: 100 }, force: true });
+    await page.waitForTimeout(200);
+    await page.keyboard.press('Control+A');
+    await page.keyboard.type(content, { delay: 10 });
+  }
+
   await page.waitForTimeout(500);
-
-  // Select all and type new content
-  await page.keyboard.press('Control+A');
-  await page.keyboard.type(content, { delay: 10 });
 }
 
 /**
  * Wait for test runner results to appear
  */
 export async function waitForTestResults(page: Page) {
-  const testResultsContainer = page.locator('[class*="test-results"], [class*="TestResults"], .results, [data-testid="test-results"]');
+  const terminalTab = page.locator('.tab-btn').filter({ hasText: /Terminal|Pruebas|Tests/i });
+  if (await terminalTab.isVisible().catch(() => false)) {
+    await terminalTab.click().catch(() => {});
+  }
+  const testResultsContainer = page.locator('.terminal-body .terminal-line.pass, .terminal-body .terminal-line.fail');
   await expect(testResultsContainer.first()).toBeVisible({ timeout: 30000 });
 }
 
@@ -116,8 +148,15 @@ export async function waitForConfetti(page: Page) {
  */
 export async function getMissionProgressFromStorage(page: Page) {
   const progress = await page.evaluate(() => {
-    const progressData = localStorage.getItem('soroban_quest_progress');
-    return progressData ? JSON.parse(progressData) : null;
+    try {
+      const profiles = JSON.parse(localStorage.getItem('soroban_quest_profiles') || '[]');
+      const activeId = localStorage.getItem('soroban_quest_active_profile') || 'player-1';
+      const active = profiles.find(p => p.id === activeId) || profiles[0];
+      return active?.progress || null;
+    } catch {
+      const progressData = localStorage.getItem('soroban_quest_progress');
+      return progressData ? JSON.parse(progressData) : null;
+    }
   });
   return progress;
 }
