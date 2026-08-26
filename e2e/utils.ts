@@ -54,9 +54,9 @@ export async function maskDynamicElements(page: Page) {
 export async function waitForMonaco(page: Page) {
   await page.locator('.mission-detail').waitFor({ state: 'attached', timeout: 20000 });
   await page.locator('.mission-detail-skeleton, .loading').waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
-  const editorTab = page.getByRole('tab', { name: /editor/i });
+  const editorTab = page.locator('.tab-btn, [role="tab"]').filter({ hasText: /editor/i }).first();
   if (await editorTab.isVisible().catch(() => false)) {
-    await editorTab.click();
+    await editorTab.click().catch(() => {});
   }
   const editor = page.locator('.monaco-editor');
   await expect(editor.first()).toBeVisible({ timeout: 20000 });

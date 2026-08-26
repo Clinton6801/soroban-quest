@@ -193,17 +193,21 @@ test.describe('Mission Gameplay Flow — Complete Tests', () => {
     // Pre-complete all missions in Chapter 1 with enough XP for level 3 (campaign 2 requires level 3)
     await page.goto('/');
     await page.evaluate(() => {
-      const progress = {
-        completedMissions: ['hello-soroban', 'greetings-protocol'],
-        xp: 2000,
-        level: 3,
-        badges: [],
-        firstTryMissions: ['hello-soroban', 'greetings-protocol'],
-        streak: 0,
-        lastLogin: null,
-        gold: 100,
-        purchasedItems: [],
-        missionAttempts: {},
+      const profileSlot = {
+        id: 'player-1',
+        profile: { name: 'Player 1', avatar: '🛡️' },
+        progress: {
+          completedMissions: ['hello-soroban', 'greetings-protocol'],
+          xp: 2000,
+          level: 3,
+          badges: [],
+          firstTryMissions: ['hello-soroban', 'greetings-protocol'],
+          streak: 0,
+          lastLogin: null,
+          gold: 100,
+          purchasedItems: [],
+          missionAttempts: {},
+        },
       };
       localStorage.setItem('soroban_quest_profiles', JSON.stringify([profileSlot]));
       localStorage.setItem('soroban_quest_active_profile', 'player-1');
@@ -271,11 +275,7 @@ test.describe('Mission Gameplay Flow — Complete Tests', () => {
 
     // Wait for completion & progress save
     await waitForTestResults(page);
-<<<<<<< HEAD
     await waitForConfetti(page);
-=======
-    await page.waitForTimeout(1500);
->>>>>>> 684f7d3 (fix(e2e): resolve E2E test failures, strict mode assertions, and lint warnings)
 
     // Check localStorage for XP increase
     const progress = await getMissionProgressFromStorage(page);

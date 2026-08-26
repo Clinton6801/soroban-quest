@@ -58,48 +58,6 @@ export default function Profile() {
     'Sign in to sync progress across browsers. Progress stays on this device until you opt in.',
   );
 
-  const [syncStatus, setSyncStatus] = useState(() => getCloudSyncStatus());
-  const [syncMessage, setSyncMessage] = useState(() => {
-    if (!authService.isAuthenticated()) return 'Sign in to enable cloud sync';
-    return navigator.onLine ? 'Your data will be synced across devices' : 'Offline — changes saved locally';
-  });
-  const [authForm, setAuthForm] = useState({ email: '', username: '' });
-
-  const handleAuthSubmit = (type) => {
-    const fn = type === 'signin' ? authService.signIn : authService.signUp;
-    try {
-      const result = fn(authForm.email, authForm.username);
-      if (result) {
-        setSyncStatus('synced');
-        setSyncMessage('Signed in successfully');
-        showToast('Signed in successfully!', 'success');
-      }
-    } catch (err) {
-      showToast(err.message || 'Authentication failed', 'error');
-    }
-  };
-
-  const handleSyncNow = async () => {
-    setSyncStatus('syncing');
-    setSyncMessage('Syncing...');
-    try {
-      await cloudSyncService.syncLocalToCloud();
-      setSyncStatus('synced');
-      setSyncMessage('Sync complete');
-      showToast('Sync complete!', 'success');
-    } catch {
-      setSyncStatus('offline');
-      setSyncMessage('Sync failed — try again later');
-    }
-  };
-
-  const handleSignOut = () => {
-    authService.signOut();
-    setSyncStatus('idle');
-    setSyncMessage('Sign in to enable cloud sync');
-    showToast('Signed out', 'info');
-  };
-
   const xpProgress = getXPProgress(state);
   const rankIndex = Math.min(Math.max(state.level - 1, 0), MAX_RANK_INDEX);
   const rankTitle = t(`ranks.${rankIndex}`);
