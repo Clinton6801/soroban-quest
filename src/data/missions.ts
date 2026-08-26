@@ -12,16 +12,10 @@
    ========================================== */
 
 import helloSorobanMarkdown from './missions/hello-soroban.md?raw';
-import { createMissionFromMarkdown } from '../systems/missionParser.js';
-import enLocale from '../i18n/locales/en.json';
-import esLocale from '../i18n/locales/es.json';
+import { createMissionFromMarkdown } from '../systems/missionParser';
+import type { Mission, LocalizedMission, Language } from '../types/game';
 
-const authoredMissions = Object.values(
-    import.meta.glob('./missions/authored/*.json', { eager: true, import: 'default' }),
-);
-const missionLocales = { en: enLocale, es: esLocale };
-
-export const DEFAULT_MISSION_LANG = 'en';
+export const DEFAULT_MISSION_LANG: Language = 'en';
 
 const helloSorobanContent = createMissionFromMarkdown(helloSorobanMarkdown);
 
@@ -4539,7 +4533,6 @@ impl ConfigContract {
         ],
         conceptsIntroduced: ['access control', 'authorization fix', 'admin guard', 'security audit'],
     },
-    ...authoredMissions,
 ];
 
 /**
@@ -4549,23 +4542,24 @@ impl ConfigContract {
  * legacy top-level field. The `i18n` block itself is omitted from the
  * returned object so consumers keep using `mission.title` etc.
  */
-export function localizeMission(mission, lang = DEFAULT_MISSION_LANG) {
-    if (!mission) return mission;
+export function localizeMission(
+    mission: Mission | null | undefined,
+    lang: Language = DEFAULT_MISSION_LANG
+): LocalizedMission | null | undefined {
+    if (!mission) return mission as any;
 
     const { i18n, ...neutral } = mission;
-    const locale =
+    const locale: Partial<LocalizedMission> =
         (i18n && (i18n[lang] || i18n[DEFAULT_MISSION_LANG])) || {};
-    const fallback = (i18n && i18n[DEFAULT_MISSION_LANG]) || {};
+    const fallback: Partial<LocalizedMission> =
+        (i18n && i18n[DEFAULT_MISSION_LANG]) || {};
 
-    const resolve = (value, language) => {
-        if (typeof value !== 'string' || !value.startsWith('missions.')) return value;
-        return value.split('.').reduce((current, part) => current?.[part], missionLocales[language]);
-    };
-
-    const pick = (field) => {
-        const value = locale[field] != null ? locale[field] : fallback[field] != null ? fallback[field] : neutral[field];
-        return resolve(value, locale === i18n?.[lang] ? lang : DEFAULT_MISSION_LANG);
-    };
+    const pick = (field: keyof LocalizedMission): any =>
+        locale[field] != null
+            ? locale[field]
+            : fallback[field] != null
+            ? fallback[field]
+            : (neutral as any)[field];
 
     return {
         ...neutral,
@@ -4573,10 +4567,13 @@ export function localizeMission(mission, lang = DEFAULT_MISSION_LANG) {
         story: pick('story'),
         learningGoal: pick('learningGoal'),
         hints: pick('hints') || [],
-    };
+    } as LocalizedMission;
 }
 
 /** Localizes an array of missions. */
-export function localizeMissions(list, lang = DEFAULT_MISSION_LANG) {
-    return (list || []).map((m) => localizeMission(m, lang));
+export function localizeMissions(
+    list: Mission[] | null | undefined,
+    lang: Language = DEFAULT_MISSION_LANG
+): LocalizedMission[] {
+    return (list || []).map((m) => localizeMission(m, lang) as LocalizedMission);
 }

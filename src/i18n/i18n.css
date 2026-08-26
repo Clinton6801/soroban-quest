@@ -71,7 +71,7 @@
   position: absolute;
   top: calc(100% + 0.5rem);
   right: 0;
-  min-width: 170px;
+  min-width: 200px;
   list-style: none;
   margin: 0;
   padding: 0.35rem;
