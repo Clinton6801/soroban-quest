@@ -58,14 +58,14 @@ export async function waitForMonaco(page: Page) {
   if (await editorTab.isVisible().catch(() => false)) {
     await editorTab.click().catch(() => {});
   }
-  const editor = page.locator('.monaco-editor');
+  const editor = page.locator('.monaco-editor, .editor-placeholder, .mission-editor-panel');
   await expect(editor.first()).toBeVisible({ timeout: 20000 });
   await page.waitForTimeout(500);
 }
 
 export async function fillMonacoEditor(page: Page, content: string) {
   await waitForMonaco(page);
-  const editorHost = page.locator('.monaco-editor').first();
+  const editorHost = page.locator('.monaco-editor, .editor-placeholder, .mission-editor-panel').first();
   await editorHost.click({ position: { x: 40, y: 40 }, force: true });
   await page.keyboard.press('Control+A');
   await page.keyboard.insertText(content);
