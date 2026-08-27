@@ -207,7 +207,8 @@ describe('Japanese (ja) Localization', () => {
     });
 
     it('should not have mojibake (corrupted characters)', () => {
-      const problematicPatterns = [/\?{2,}/, /[^\x00-\x7F]{10,}/]; // Double ?, or many high bytes
+      // eslint-disable-next-line no-control-regex
+      const problematicPatterns = [/\?{2,}/, /[^\u0000-\u007F]{10,}/]; // Double ?, or many high bytes
       const checkForMojibake = (str) => {
         return !problematicPatterns.some(pattern => pattern.test(str));
       };
@@ -236,7 +237,7 @@ describe('Japanese (ja) Localization', () => {
 
     it('should handle case-insensitive language codes', () => {
       const mission = missions[0];
-      const localizedLower = localizeMission(mission, 'ja');
+      const _localizedLower = localizeMission(mission, 'ja');
       const localizedUpper = localizeMission(mission, 'JA');
       
       // Note: current implementation may be case-sensitive, adjust if needed

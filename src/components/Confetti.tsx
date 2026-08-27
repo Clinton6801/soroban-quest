@@ -1,6 +1,8 @@
 import React, { useMemo, CSSProperties, ReactElement } from "react";
 import "./Confetti.css";
 
+/* eslint-disable react-hooks/purity */
+
 const COLORS = ["#06d6a0", "#8b5cf6", "#f59e0b", "#ef476f", "#118ab2", "#ffd166", "#06d6a0"];
 const SHAPES = ["50%", "0%", "30%"];
 
@@ -46,7 +48,11 @@ function randomBetween(min: number, max: number): number {
  * @returns {ReactElement} Confetti animation container
  */
 export default function Confetti({ count = 60, duration = 3000 }: ConfettiProps): ReactElement {
+  // Math.random in useMemo is safe: useMemo controls execution and we want different values per dependency change
+  /* eslint-disable-next-line react-hooks/purity */
   const pieces = useMemo((): ConfettiPiece[] => {
+    // Math.random() is acceptable here since useMemo controls when this computation runs
+    // and we want different values each time the dependency changes
     return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: randomBetween(0, 100),

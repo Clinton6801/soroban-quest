@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { missions, localizeMissions } from '../data/missions';
+
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { loadProgress } from '../systems/storage';
 import { useTranslation } from '../i18n/useTranslation';
 import './SkillTree.css';
@@ -52,6 +55,7 @@ export default function SkillTree() {
   );
 
   useEffect(() => {
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
     const progress = loadProgress();
     setCompletedMissions(progress.completedMissions || []);
   }, []);

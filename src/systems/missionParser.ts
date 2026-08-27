@@ -11,13 +11,13 @@ const FRONTMATTER_NUMBER_FIELDS = [
   "xpReward",
 ];
 
-function parseScalar(value: string): any {
+function parseScalar(value: string): unknown {
   const trimmed = value.trim();
   if (trimmed === "[]") return [];
   return trimmed.replace(/^['"]|['"]$/g, "");
 }
 
-function normalizeArray(value: any): string[] {
+function normalizeArray(value: unknown): string[] {
   if (Array.isArray(value)) return value;
   if (typeof value === "string") {
     return value
@@ -29,7 +29,7 @@ function normalizeArray(value: any): string[] {
 }
 
 interface FrontmatterData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 function parseFrontmatterBlock(block: string): FrontmatterData {
@@ -120,10 +120,10 @@ export function parseMissionMarkdown(source: string): FrontmatterData {
 
 interface I18nData {
   [key: string]: {
-    title?: string;
-    story?: string;
-    learningGoal?: string;
-    hints?: string[];
+    title?: unknown;
+    story?: unknown;
+    learningGoal?: unknown;
+    hints?: unknown[];
   };
 }
 
@@ -145,7 +145,7 @@ export function createMissionFromMarkdown(
       title,
       story,
       learningGoal,
-      hints,
+      hints: hints as unknown[],
     },
     ...(overrides.i18n || {}),
   };

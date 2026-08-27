@@ -16,16 +16,16 @@ import React, {
 import en from './locales/en.json';
 import es from './locales/es.json';
 import fr from './locales/fr.json';
-import zhCN from './locales/zh-CN.json';
+import ja from './locales/ja.json';
 import { setActiveLanguage } from './languageBridge';
 
-const LOCALES: Record<string, Record<string, any>> = {
+const LOCALES: Record<string, Record<string, unknown>> = {
   en,
   es,
   fr,
-  'zh-CN': zhCN,
+  ja,
 };
-const SUPPORTED = ['en', 'es', 'fr', 'zh-CN'] as const;
+const SUPPORTED = ['en', 'es', 'fr', 'ja'] as const;
 const STORAGE_KEY = 'soroban_quest_lang';
 const DEFAULT_LANG: (typeof SUPPORTED)[number] = 'en';
 
@@ -41,9 +41,9 @@ export interface LanguageOption {
  * Language context value type
  */
 export interface LanguageContextValue {
-  t: (key: string, vars?: Record<string, any>) => string;
+  t: (_key: string, _vars?: Record<string, unknown>) => string;
   language: (typeof SUPPORTED)[number];
-  setLanguage: (lang: (typeof SUPPORTED)[number]) => void;
+  setLanguage: (_lang: (typeof SUPPORTED)[number]) => void;
   languages: LanguageOption[];
 }
 
@@ -91,39 +91,33 @@ function detectBrowserLanguage(): (typeof SUPPORTED)[number] {
   ].filter(Boolean);
 
   for (const c of candidates) {
-    const code = String(c).trim();
-    if (SUPPORTED.includes(code as any)) return code as any;
-
-    const base = code.toLowerCase().split('-')[0];
-    const exactMatch = SUPPORTED.find((lang) => lang.toLowerCase() === base.toLowerCase());
-    if (exactMatch) return exactMatch;
-
-    if (code.toLowerCase().startsWith('zh')) return 'zh-CN';
+    const base = String(c).toLowerCase().split('-')[0];
+    if (SUPPORTED.includes(base as (typeof SUPPORTED)[number])) return base as (typeof SUPPORTED)[number];
   }
   return DEFAULT_LANG;
 }
 
 function readStoredLanguage(): (typeof SUPPORTED)[number] | null {
   const stored = storageGet(STORAGE_KEY);
-  if (stored && SUPPORTED.includes(stored as any)) return stored as any;
+  if (stored && SUPPORTED.includes(stored as (typeof SUPPORTED)[number])) return stored as (typeof SUPPORTED)[number];
   return null;
 }
 
 function resolveKey(
-  dict: Record<string, any>,
+  dict: Record<string, unknown>,
   key: string,
-): any {
+): unknown {
   return key
     .split('.')
     .reduce(
-      (acc: any, part: string) => (acc == null ? undefined : acc[part]),
+      (acc: unknown, part: string) => (acc != null && typeof acc === 'object' && part in (acc as Record<string, unknown>) ? (acc as Record<string, unknown>)[part] : undefined),
       dict,
     );
 }
 
 function interpolate(
   template: string | undefined,
-  vars?: Record<string, any>,
+  vars?: Record<string, unknown>,
 ): string {
   if (typeof template !== 'string' || !vars) return template ?? '';
   return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, name) =>
@@ -184,7 +178,7 @@ export const LanguageProvider: FC<{ children: ReactNode }> = ({
 
   // t('a.b.c', { name: 'World' })
   const t = useCallback(
-    (key: string, vars?: Record<string, any>): string => {
+    (key: string, vars?: Record<string, unknown>): string => {
       if (!key) return '';
       const dict = LOCALES[language] || LOCALES[DEFAULT_LANG];
       const fallback = LOCALES[DEFAULT_LANG];
@@ -194,12 +188,11 @@ export const LanguageProvider: FC<{ children: ReactNode }> = ({
       if (value == null) {
         if (import.meta?.env?.DEV) {
           // Surface missing keys in development without crashing
-          // eslint-disable-next-line no-console
           console.warn(`[i18n] Missing translation key: "${key}"`);
         }
         return key;
       }
-      return interpolate(value, vars);
+      return interpolate(value as string | undefined, vars);
     },
     [language],
   );

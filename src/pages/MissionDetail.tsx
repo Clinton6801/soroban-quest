@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import Editor from "../components/LazyMonacoEditor";
 import ReactMarkdown from "react-markdown";
 import { getMissionById, getNextMission } from "../systems/missionLoader";
 import { runTests } from "../systems/testRunner";
+import type { TestResult } from "../systems/testRunner";
 import { loadProgress, saveProgress } from "../systems/storage";
-import { completeMission, recordAttempt, spendGoldForHint, isHintGoldUnlocked, HINT_GOLD_COST } from "../systems/gameEngine";
+import { completeMission, recordAttempt } from "../systems/gameEngine";
 import { logActivity, ACTIVITY_TYPES } from "../systems/activityLogger";
 import MissionDetailSkeleton from "../components/MissionDetailSkeleton";
 import { useOkashi, TOAST_STATES } from "../systems/useokashi";
@@ -26,11 +30,19 @@ import {
   loadEditorTheme,
   saveEditorTheme,
 } from "../systems/editorThemes";
+import type { IStandaloneCodeEditor, Monaco } from "monaco-editor";
 import "./MissionDetail.css"
 
 const LIVE_MARKER_OWNER = "soroban-quest-live";
 const SECURITY_MARKER_OWNER = "soroban-quest-security";
 const MAX_RANK_INDEX = 10;
+
+interface VictoryData {
+  xp: number;
+  leveledUp: boolean;
+  newLevel: number;
+  newBadges: string[];
+}
 
 export default function MissionDetail() {
   useDocumentTitle('Mission Detail');
@@ -52,16 +64,14 @@ export default function MissionDetail() {
   // --------------------------- States ---------------------------
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState("");
-  const [testResults, setTestResults] = useState<any[]>([]);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [isCompiling, setIsCompiling] = useState(false);
   const [showVictory, setShowVictory] = useState(false);
-  const [victoryData, setVictoryData] = useState<any>(null);
+  const [victoryData, setVictoryData] = useState<VictoryData | null>(null);
   const [hintIndex, setHintIndex] = useState(-1);
-  const [goldBalance, setGoldBalance] = useState(() => loadProgress().gold || 0);
-  const [goldUnlockedHints, setGoldUnlockedHints] = useState(() => loadProgress().goldUnlockedHints || {});
   const [showReplay, setShowReplay] = useState(false);
-  const [replayData, setReplayData] = useState<any>(null);
+  const [replayData, setReplayData] = useState<unknown>(null);
 
   const [livePassCount, setLivePassCount] = useState(0);
   const [liveTotalCount, setLiveTotalCount] = useState(0);
@@ -73,11 +83,11 @@ export default function MissionDetail() {
   });
 
   const terminalBodyRef = useRef<HTMLDivElement | null>(null);
-  const editorRef = useRef<any>(null);      
-  const monacoRef = useRef<any>(null);      
-  const validatorRef = useRef<any>(null);
+  const editorRef = useRef<IStandaloneCodeEditor | null>(null);      
+  const monacoRef = useRef<Monaco | null>(null);      
+  const validatorRef = useRef<unknown>(null);
   const victoryModalRef = useRef<HTMLDivElement | null>(null);
-  const compilerRef = useRef<any>(null);
+  const compilerRef = useRef<WasmCompiler | null>(null);
 
   const { openInOkashi, toast } = useOkashi();
 
@@ -94,7 +104,60 @@ export default function MissionDetail() {
     [missionId, language],
   );
 
+  // Marker functions (declared before useEffect)
+  function applyMonacoMarkers(markers: TestResult[]): void {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+    const model = editor.getModel();
+    if (!model) return;
+    monaco.editor.setModelMarkers(model, LIVE_MARKER_OWNER, markers);
+  }
+
+  function clearMonacoMarkers(): void {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+    const model = editor.getModel();
+    if (model) monaco.editor.setModelMarkers(model, LIVE_MARKER_OWNER, []);
+  }
+
+  function applySecurityMarkers(markers: TestResult[]): void {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+    const model = editor.getModel();
+    if (!model) return;
+    monaco.editor.setModelMarkers(model, SECURITY_MARKER_OWNER, markers);
+  }
+
+  function clearSecurityMarkers(): void {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+    const model = editor.getModel();
+    if (model) monaco.editor.setModelMarkers(model, SECURITY_MARKER_OWNER, []);
+  }
+
+  function applyCompileMarkers(markers: TestResult[]): void {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+    const model = editor.getModel();
+    if (!model) return;
+    monaco.editor.setModelMarkers(model, COMPILE_MARKER_OWNER, markers);
+  }
+
+  function clearCompileMarkers(): void {
+    const monaco = monacoRef.current;
+    const editor = editorRef.current;
+    if (!monaco || !editor) return;
+    const model = editor.getModel();
+    if (model) monaco.editor.setModelMarkers(model, COMPILE_MARKER_OWNER, []);
+  }
+
   // --------------------------- Load Mission ---------------------------
+   
   useEffect(() => {
     setLoading(true);
     if (mission) {
@@ -102,11 +165,6 @@ export default function MissionDetail() {
         setCode(mission.template || "");
         setTestResults([]);
         setHintIndex(-1);
-        {
-          const freshProgress = loadProgress();
-          setGoldBalance(freshProgress.gold || 0);
-          setGoldUnlockedHints(freshProgress.goldUnlockedHints || {});
-        }
         setShowVictory(false);
         setLivePassCount(0);
         setLiveTotalCount(0);
@@ -151,6 +209,7 @@ export default function MissionDetail() {
   }, []);
 
   // Set up the WASM compiler (lazy worker) and tear it down on unmount.
+  /* eslint-disable-next-line react-hooks/set-state-in-effect */
   useEffect(() => {
     compilerRef.current = getWasmCompiler();
     // Kick off worker init in the background so the first compile is snappy.
@@ -169,8 +228,8 @@ export default function MissionDetail() {
     state = missionId ? recordAttempt(state, missionId) : state;
     saveProgress(state);
 
-    const resultCollector: any[] = [];
-    const addResult = (result: any): void => {
+    const resultCollector: TestResult[] = [];
+    const addResult = (result: TestResult): void => {
       resultCollector.push(result);
       setTestResults([...resultCollector]);
     };
@@ -221,8 +280,8 @@ export default function MissionDetail() {
     setTestResults([]);
     clearCompileMarkers();
 
-    const collector: any[] = [];
-    const push = (result: any): void => {
+    const collector: TestResult[] = [];
+    const push = (result: TestResult): void => {
       collector.push(result);
       setTestResults([...collector]);
     };
@@ -378,7 +437,7 @@ export default function MissionDetail() {
     validatorRef.current?.call(code, mission);
   }, [code, mission, loading]);
 
-  const handleEditorMount = useCallback((editor: any, monaco: any): void => {
+  const handleEditorMount = useCallback((editor: IStandaloneCodeEditor, monaco: Monaco): void => {
     editorRef.current = editor;
     monacoRef.current = monaco;
     // Register custom themes so the stored selection applies on first paint.
@@ -393,58 +452,7 @@ export default function MissionDetail() {
     monacoRef.current?.editor.setTheme(nextTheme);
   }, []);
 
-  function applyMonacoMarkers(markers: any[]): void {
-    const monaco = monacoRef.current;
-    const editor = editorRef.current;
-    if (!monaco || !editor) return;
-    const model = editor.getModel();
-    if (!model) return;
-    monaco.editor.setModelMarkers(model, LIVE_MARKER_OWNER, markers);
-  }
-
-  function clearMonacoMarkers(): void {
-    const monaco = monacoRef.current;
-    const editor = editorRef.current;
-    if (!monaco || !editor) return;
-    const model = editor.getModel();
-    if (model) monaco.editor.setModelMarkers(model, LIVE_MARKER_OWNER, []);
-  }
-
-  function applySecurityMarkers(markers: any[]): void {
-    const monaco = monacoRef.current;
-    const editor = editorRef.current;
-    if (!monaco || !editor) return;
-    const model = editor.getModel();
-    if (!model) return;
-    monaco.editor.setModelMarkers(model, SECURITY_MARKER_OWNER, markers);
-  }
-
-  function clearSecurityMarkers(): void {
-    const monaco = monacoRef.current;
-    const editor = editorRef.current;
-    if (!monaco || !editor) return;
-    const model = editor.getModel();
-    if (model) monaco.editor.setModelMarkers(model, SECURITY_MARKER_OWNER, []);
-  }
-
-  function applyCompileMarkers(markers: any[]): void {
-    const monaco = monacoRef.current;
-    const editor = editorRef.current;
-    if (!monaco || !editor) return;
-    const model = editor.getModel();
-    if (!model) return;
-    monaco.editor.setModelMarkers(model, COMPILE_MARKER_OWNER, markers);
-  }
-
-  function clearCompileMarkers(): void {
-    const monaco = monacoRef.current;
-    const editor = editorRef.current;
-    if (!monaco || !editor) return;
-    const model = editor.getModel();
-    if (model) monaco.editor.setModelMarkers(model, COMPILE_MARKER_OWNER, []);
-  }
-
-  function statusBarState(): any {
+  function statusBarState(): { icon: string; label: string; className: string } {
     if (liveTotalCount === 0) {
       return {
         label: t("missionDetail.status.checking"),
@@ -504,48 +512,6 @@ export default function MissionDetail() {
         `Used hint ${nextIndex + 1} for ${mission.title}`,
       );
     }
-  };
-
-  const handleGoldHint = (): void => {
-    if (!mission?.hints) return;
-    const nextIndex = hintIndex + 1;
-    if (nextIndex >= mission.hints.length) return;
-
-    const current = loadProgress();
-
-    // Already gold-unlocked on a previous visit — reveal for free, don't re-charge.
-    if (isHintGoldUnlocked(current, missionId, nextIndex)) {
-      setHintIndex(nextIndex);
-      return;
-    }
-
-    if ((current.gold || 0) < HINT_GOLD_COST) {
-      if (showToast) {
-        showToast(
-          t("missionDetail.toasts.hintInsufficientGold", { cost: HINT_GOLD_COST }),
-          "error",
-        );
-      }
-      return;
-    }
-
-    const updated = spendGoldForHint(current, missionId, nextIndex, HINT_GOLD_COST);
-    saveProgress(updated);
-    setGoldBalance(updated.gold || 0);
-    setGoldUnlockedHints(updated.goldUnlockedHints || {});
-    setHintIndex(nextIndex);
-
-    if (showToast) {
-      showToast(
-        t("missionDetail.toasts.hintGoldUnlocked", { index: nextIndex + 1, cost: HINT_GOLD_COST }),
-        "success",
-      );
-    }
-    logActivity(
-      ACTIVITY_TYPES.HINT_USED,
-      { missionId, hintIndex: nextIndex, title: mission.title, gold: HINT_GOLD_COST },
-      `Spent ${HINT_GOLD_COST} gold to unlock hint ${nextIndex + 1} for ${mission.title}`,
-    );
   };
 
   const handleReset = (): void => {
@@ -769,33 +735,6 @@ export default function MissionDetail() {
               >
                 {t("missionDetail.editor.hint")}
               </button>
-              {(() => {
-                const nextHintIdx = hintIndex + 1;
-                const noMoreHints = !mission.hints || hintIndex >= mission.hints.length - 1;
-                const nextAlreadyGold = (goldUnlockedHints[missionId] || []).includes(nextHintIdx);
-                const canAfford = goldBalance >= HINT_GOLD_COST;
-                const disabled = noMoreHints || (!nextAlreadyGold && !canAfford);
-                return (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={handleGoldHint}
-                    disabled={disabled}
-                    title={
-                      nextAlreadyGold
-                        ? t("missionDetail.editor.goldHintUnlocked")
-                        : canAfford
-                          ? t("missionDetail.editor.goldHintTitle", { cost: HINT_GOLD_COST })
-                          : t("missionDetail.editor.goldHintInsufficient", { cost: HINT_GOLD_COST })
-                    }
-                    aria-label="Spend gold to instantly reveal the next hint"
-                  >
-                    {nextAlreadyGold
-                      ? t("missionDetail.editor.goldHintUnlocked")
-                      : t("missionDetail.editor.goldHint", { cost: HINT_GOLD_COST })}
-                  </button>
-                );
-              })()}
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"

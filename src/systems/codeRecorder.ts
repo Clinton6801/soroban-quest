@@ -24,7 +24,7 @@ class CodeRecorder {
   storageKey: string;
   events: RecordedEvent[];
   startTime: number;
-  debounceTimer: NodeJS.Timeout | null;
+  debounceTimer: ReturnType<typeof setTimeout> | null;
   lastCodeState: string;
   isRecording: boolean;
 

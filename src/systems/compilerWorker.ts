@@ -18,10 +18,10 @@
 import { analyze } from "./sorobanAnalyzer";
 
 // Cache of a loaded real-WASM compiler, if one ever gets wired in.
-let wasmModule: any = null;
+let wasmModule: unknown = null;
 let wasmTried = false;
 
-async function loadWasm(wasmUrl: string | null): Promise<any> {
+async function loadWasm(wasmUrl: string | null): Promise<unknown> {
   if (!wasmUrl || wasmTried) return wasmModule;
   wasmTried = true;
   try {
@@ -44,29 +44,29 @@ async function compile({
   wasmUrl,
 }: {
   code: string;
-  mission: any;
+  mission: unknown;
   wasmUrl: string | null;
-}): Promise<any> {
+}): Promise<unknown> {
   const wasm = await loadWasm(wasmUrl);
-  if (wasm) {
+  if (wasm && typeof (wasm as Record<string, unknown>).compileAndRun === 'function') {
     // Real compiler path (when available). Normalize its output to our shape.
-    const raw = await wasm.compileAndRun(code);
+    const raw = await (wasm as Record<string, unknown> & { compileAndRun(code: string): Promise<Record<string, unknown>> }).compileAndRun(code);
     return {
       ok: !!raw.ok,
       engine: "wasm",
-      diagnostics: raw.diagnostics || [],
-      stdout: raw.stdout || "",
-      stderr: raw.stderr || "",
-      returnValue: raw.returnValue ?? null,
+      diagnostics: (raw.diagnostics as unknown[]) || [],
+      stdout: (raw.stdout as string) || "",
+      stderr: (raw.stderr as string) || "",
+      returnValue: (raw.returnValue as unknown) ?? null,
       checkResults: [],
       summary: raw.ok
         ? "✓ Compiled successfully (WASM)"
         : "✗ Compilation failed (WASM)",
-      errorCount: (raw.diagnostics || []).filter(
-        (d: any) => d.severity === "error"
+      errorCount: ((raw.diagnostics as Array<{ severity?: string }>) || []).filter(
+        (d) => d.severity === "error"
       ).length,
-      warningCount: (raw.diagnostics || []).filter(
-        (d: any) => d.severity === "warning"
+      warningCount: ((raw.diagnostics as Array<{ severity?: string }>) || []).filter(
+        (d) => d.severity === "warning"
       ).length,
     };
   }
@@ -74,25 +74,25 @@ async function compile({
   return analyze(code, mission);
 }
 
-const ctx = self as any;
+const ctx = self as unknown as { onmessage: ((event: MessageEvent) => Promise<void>) | null; postMessage(msg: unknown): void };
 
 ctx.onmessage = async (event: MessageEvent) => {
-  const data = event.data || {};
-  if (data.type !== "compile") return;
-  const { id } = data;
+  const data = event.data as Record<string, unknown> | null || {};
+  if ((data as Record<string, unknown>).type !== "compile") return;
+  const { id } = data as { id?: unknown };
   try {
-    const result = await compile(data);
-    ctx.postMessage({ type: "result", id, result });
+    const result = await compile(data as { code?: string; mission?: unknown; wasmUrl?: string | null });
+    (ctx as unknown as { postMessage(msg: unknown): void }).postMessage({ type: "result", id, result });
   } catch (err) {
-    ctx.postMessage({
+    (ctx as unknown as { postMessage(msg: unknown): void }).postMessage({
       type: "error",
       id,
-      message: (err as any)?.message
-        ? (err as any).message
+      message: (err as Record<string, unknown>)?.message
+        ? (err as Record<string, unknown>).message
         : String(err),
     });
   }
 };
 
 // Signal readiness so the host can resolve init().
-ctx.postMessage({ type: "ready" });
+(ctx as unknown as { postMessage(msg: unknown): void }).postMessage({ type: "ready" });

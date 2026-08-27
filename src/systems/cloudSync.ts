@@ -20,12 +20,12 @@ const SYNC_STORAGE_KEY = "soroban_quest_cloud_sync";
 const SYNC_DEBOUNCE_MS = 800;
 
 interface SyncPayload {
-  user: any;
+  user: unknown;
   timestamp: number;
   data: {
     progress: GameState;
     profile: Profile;
-    profiles: any[];
+    profiles: unknown[];
     activeProfileId: string;
   };
 }
@@ -50,7 +50,7 @@ function readStorageState(): SyncPayload | null {
   }
 }
 
-function writeStorageState(state: any): void {
+function writeStorageState(state: SyncPayload & { status?: string }): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(getSyncStorageKey(), JSON.stringify(state));
 }
@@ -127,17 +127,17 @@ export const cloudSyncService = {
 
   getStatus(): string {
     const state = readStorageState();
-    return (state as any)?.status || "idle";
+    return (state as SyncPayload & { status?: string })?.status || "idle";
   },
 
-  setStatus(status: string): any {
+  setStatus(status: string): SyncPayload & { status: string } {
     const state = readStorageState() || {};
     const nextState = { ...state, status };
-    writeStorageState(nextState);
-    return nextState;
+    writeStorageState(nextState as SyncPayload & { status: string });
+    return nextState as SyncPayload & { status: string };
   },
 
-  async syncFromCloud(): Promise<any> {
+  async syncFromCloud(): Promise<SyncPayload['data'] | null> {
     if (!this.isEnabled()) {
       this.setStatus("offline");
       return null;
@@ -173,10 +173,10 @@ export const cloudSyncService = {
     return latestData;
   },
 
-  async pushToCloud(): Promise<any> {
+  async pushToCloud(): Promise<SyncPayload> {
     if (!this.isEnabled()) {
       this.setStatus("offline");
-      return null;
+      return null as unknown as SyncPayload;
     }
 
     const payload = createPayload();
@@ -184,7 +184,7 @@ export const cloudSyncService = {
     return payload;
   },
 
-  async syncLocalToCloud(): Promise<any> {
+  async syncLocalToCloud(): Promise<SyncPayload | null> {
     if (!this.isEnabled()) {
       this.setStatus("offline");
       return null;
@@ -196,10 +196,10 @@ export const cloudSyncService = {
     return payload;
   },
 
-  async migrateLocalData(): Promise<any> {
+  async migrateLocalData(): Promise<SyncPayload> {
     if (!this.isEnabled()) {
       this.setStatus("offline");
-      return null;
+      return null as unknown as SyncPayload;
     }
 
     const payload = createPayload();
@@ -208,7 +208,7 @@ export const cloudSyncService = {
   },
 };
 
-let syncTimer: NodeJS.Timeout | null = null;
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function scheduleCloudSync(): void {
   if (typeof window === "undefined") return;
@@ -226,6 +226,6 @@ export function getCloudSyncStatus(): string {
   return cloudSyncService.getStatus();
 }
 
-export function resetCloudSyncStatus(): any {
+export function resetCloudSyncStatus(): SyncPayload & { status: string } {
   return cloudSyncService.setStatus("idle");
 }

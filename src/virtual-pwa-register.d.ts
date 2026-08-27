@@ -11,7 +11,7 @@ declare module 'virtual:pwa-register/react' {
     onNeedRefresh?: () => void;
     onOfflineReady?: () => void;
     onRegistered?: (registration: ServiceWorkerRegistration) => void;
-    onRegistrationError?: (error: any) => void;
+    onRegistrationError?: (error: unknown) => void;
   }
 
   export interface UseRegisterSWResult {

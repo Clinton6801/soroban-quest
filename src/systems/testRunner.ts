@@ -22,7 +22,7 @@ export interface TestRunnerOutput {
 
 export async function runTests(
   code: string,
-  mission: any
+  mission: unknown
 ): Promise<TestRunnerOutput> {
   const results: TestResult[] = [];
 
@@ -143,7 +143,7 @@ function checkSyntaxBasics(code: string): {
 
 function checkStructure(
   code: string,
-  _mission: any
+  _mission: unknown
 ): { passed: boolean; message: string } {
   // Must have at least one fn declaration
   if (!/fn\s+\w+/.test(code)) {

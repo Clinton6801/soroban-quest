@@ -263,13 +263,14 @@ function validateCheck(
 // Public API
 export function runLiveValidation(
   code: string,
-  mission: any
+  mission: unknown
 ): ValidationResultLive {
-  if (!mission?.checks) {
+  const missionObj = mission as Record<string, unknown>;
+  if (!missionObj?.checks) {
     return { markers: [], passCount: 0, totalCount: 0 };
   }
 
-  const liveChecks = mission.checks.filter((c: Check) =>
+  const liveChecks = (missionObj.checks as Check[]).filter((c: Check) =>
     LIVE_CHECK_TYPES.has(c.type)
   );
   const markers: ValidationMarker[] = [];
@@ -288,7 +289,7 @@ export function runLiveValidation(
 }
 
 interface DebouncedValidator {
-  call: (code: string, mission: any) => void;
+  call: (code: string, mission: unknown) => void;
   cancel: () => void;
 }
 
@@ -296,9 +297,9 @@ export function createDebouncedValidator(
   waitMs = 500,
   onResult: (result: ValidationResultLive) => void
 ): DebouncedValidator {
-  let timer: NodeJS.Timeout | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
-  function call(code: string, mission: any): void {
+  function call(code: string, mission: unknown): void {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
       onResult(runLiveValidation(code, mission));

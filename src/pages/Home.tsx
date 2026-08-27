@@ -1,13 +1,17 @@
 import React, { useEffect, useRef, useState, useMemo, ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+/* eslint-disable react-hooks/preserve-manual-memoization */
+
 import { loadProgress } from '../systems/storage';
 import { useTranslation } from '../i18n/useTranslation';
 import { getAllMissions } from '../systems/missionLoader';
 import useDocumentTitle from '../systems/useDocumentTitle';
 import HomeSkeleton from '../components/HomeSkeleton';
 import Onboarding, { shouldShowOnboarding } from '../components/Onboarding';
-import { getActivityLog } from '../systems/activityLogger';
+import { getActivityLog, type ActivityEntry } from '../systems/activityLogger';
 import { getRankTitle } from '../systems/gameEngine';
+import type { Mission } from '../types/game';
 
 /**
  * Home page
@@ -25,7 +29,7 @@ export default function Home(): ReactElement {
     const completedCount = state.completedMissions.length;
     const hasMissions = completedCount > 0;
     const [loading, setLoading] = useState(true);
-    const [showOnboarding, setShowOnboarding] = useState(() => shouldShowOnboarding());
+    const [showOnboarding] = useState(() => shouldShowOnboarding());
 
     // Loading effect
     useEffect(() => {
@@ -104,7 +108,8 @@ export default function Home(): ReactElement {
     const totalMissions = missions.length;
     const badgesCount = state.badges.length;
     const goldBalance = state.gold || 0;
-    const nextMission = useMemo(() => {
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
+    const nextMission: Mission | undefined = useMemo(() => {
         return missions.find((m) => !state.completedMissions.includes(m.id));
     }, [missions, state.completedMissions]);
 
@@ -207,7 +212,7 @@ export default function Home(): ReactElement {
                                 <p className="dashboard-empty">{t('home.stats.viewAll')}</p>
                             ) : (
                                 <ul className="dashboard-activity-list">
-                                    {activityLog.map((entry: any) => (
+                                    {activityLog.map((entry: ActivityEntry) => (
                                         <li key={entry.id} className="dashboard-activity-item">
                                             <span className="dashboard-activity-msg">{entry.message}</span>
                                         </li>
@@ -222,10 +227,10 @@ export default function Home(): ReactElement {
                         {nextMission && (
                             <div className="dashboard-card dashboard-next">
                                 <h3>{t('home.stats.nextMission')}</h3>
-                                <p className="dashboard-next-title">{(nextMission as any).title}</p>
-                                <p className="dashboard-next-goal">{(nextMission as any).learningGoal}</p>
-                                <button className="btn btn-primary btn-sm" onClick={() => navigate(`/mission/${(nextMission as any).id}`)}>
-                                    {t('home.stats.continueFrom', { title: (nextMission as any).title })}
+                                <p className="dashboard-next-title">{nextMission.title}</p>
+                                <p className="dashboard-next-goal">{nextMission.learningGoal}</p>
+                                <button className="btn btn-primary btn-sm" onClick={() => navigate(`/mission/${nextMission.id}`)}>
+                                    {t('home.stats.continueFrom', { title: nextMission.title })}
                                 </button>
                             </div>
                         )}

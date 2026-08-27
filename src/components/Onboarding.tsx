@@ -49,7 +49,7 @@ export default function Onboarding(): ReactElement | null {
 
   const handlePrev = useCallback((): void => {
     if (step > 0) setStep((s) => s - 1);
-  }, []);
+  }, [step]);
 
   const handleSkip = useCallback((): void => {
     handleDismiss();

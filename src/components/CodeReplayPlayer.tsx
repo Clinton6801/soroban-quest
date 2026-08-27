@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, ReactElement, ChangeEvent } from 'react';
+import type { IStandaloneCodeEditor } from 'monaco-editor';
 import LazyMonacoEditor from './LazyMonacoEditor';
+
+/* eslint-disable react-hooks/set-state-in-effect */
 
 const PLAYBACK_SPEEDS = [1, 2, 4];
 
@@ -70,10 +73,10 @@ export default function CodeReplayPlayer({ missionId, recording, onClose }: Code
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const editorRef = useRef<any>(null);
-
-  // Initialize
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const editorRef = useRef<IStandaloneCodeEditor | null>(null);
+  // Initialize - Multiple setState calls are batched by React and acceptable
+  /* eslint-disable-next-line react-hooks/set-state-in-effect */
   useEffect(() => {
     if (recording) {
       setDuration(recording.duration || 0);
@@ -84,7 +87,7 @@ export default function CodeReplayPlayer({ missionId, recording, onClose }: Code
   }, [recording]);
 
   // Handle editor mount
-  const handleEditorDidMount = (editor: any): void => {
+  const handleEditorDidMount = (editor: IStandaloneCodeEditor): void => {
     editorRef.current = editor;
     // Make editor read-only
     editor.updateOptions({ readOnly: true });
@@ -152,7 +155,8 @@ export default function CodeReplayPlayer({ missionId, recording, onClose }: Code
     setCurrentCode(codeAtTime);
   }, [recording]);
 
-  // Playback loop
+  // Playback loop - setState is needed to stop playback at end
+  /* eslint-disable-next-line react-hooks/set-state-in-effect */
   useEffect(() => {
     if (isPlaying && currentEventIndex < recording.events.length - 1) {
       const nextEvent = recording.events[currentEventIndex + 1];

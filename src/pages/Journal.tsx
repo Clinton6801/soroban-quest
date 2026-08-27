@@ -41,7 +41,7 @@ const EVENT_CONFIG = {
  * Falls back to the stored legacy `message` for entries with unknown types
  * (or persisted by older app versions before this refactor).
  */
-function formatEventMessage(entry: ActivityEntry, t: (key: string, vars?: Record<string, any>) => string): string {
+function formatEventMessage(entry: ActivityEntry, t: (key: string, vars?: Record<string, unknown>) => string): string {
   const { type, data = {}, message } = entry;
   switch (type) {
     case ACTIVITY_TYPES.MISSION_STARTED:
@@ -86,7 +86,7 @@ export function getEntryBucket(entry: ActivityEntry): string {
 export function filterJournalEntries(
   entries: ActivityEntry[],
   { typeFilter = 'ALL', dateFilter = 'ALL', searchTerm = '' } = {},
-  t: (key: string, vars?: Record<string, any>) => string = (key) => key,
+  t: (key: string, vars?: Record<string, unknown>) => string = (key) => key,
 ): ActivityEntry[] {
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const targetBucket = FILTER_DEFS.find((f) => f.id === typeFilter)?.bucket;
@@ -103,7 +103,7 @@ export function filterJournalEntries(
   });
 }
 
-export function buildJournalRows(entries: ActivityEntry[], t: (key: string, vars?: Record<string, any>) => string, language: string): Array<{ type: string; id: string; date?: string; entry?: ActivityEntry }> {
+export function buildJournalRows(entries: ActivityEntry[], t: (key: string, vars?: Record<string, unknown>) => string, language: string): Array<{ type: string; id: string; date?: string; entry?: ActivityEntry }> {
   const rows = [];
   let currentDate = null;
 
@@ -324,7 +324,7 @@ export default function Journal() {
   );
 }
 
-function JournalEntry({ entry, progressXp, timeLocale, t }: { entry: ActivityEntry; progressXp: number; timeLocale: string; t: (key: string, vars?: Record<string, any>) => string }): React.ReactElement {
+function JournalEntry({ entry, progressXp, timeLocale, t }: { entry: ActivityEntry; progressXp: number; timeLocale: string; t: (key: string, vars?: Record<string, unknown>) => string }): React.ReactElement {
   const config = EVENT_CONFIG[entry.type] || {
     icon: '❓',
     class: 'system',
@@ -359,20 +359,19 @@ function JournalEntry({ entry, progressXp, timeLocale, t }: { entry: ActivityEnt
   );
 }
 
-function formatDateHeader(date: Date, t: (key: string, vars?: Record<string, any>) => string, language: string): string {
-  const d = new Date(date);
+function formatDateHeader(date: Date, t: (key: string, vars?: Record<string, unknown>) => string, language: string): string {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  if (isSameDay(d, today)) return t('journal.dates.today');
-  if (isSameDay(d, yesterday)) return t('journal.dates.yesterday');
+  if (isSameDay(date, today)) return t('journal.dates.today');
+  if (isSameDay(date, yesterday)) return t('journal.dates.yesterday');
 
   const locale = language === 'es' ? 'es' : 'en-US';
-  return d.toLocaleDateString(locale, {
+  return date.toLocaleDateString(locale, {
     month: 'long',
     day: 'numeric',
-    year: d.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+    year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
   });
 }
 

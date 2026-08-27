@@ -6,18 +6,18 @@ import { LanguageProvider } from './i18n';
 import './index.css';
 
 // Import PWA registration hook - dynamically imported as it may not be available
-let useRegisterSW: (() => any) | null = null;
+let useRegisterSW: (() => unknown) | null = null;
 let UpdatePrompt: (() => ReactElement | null) | null = null;
 
 // Try to load PWA registration
-import('virtual:pwa-register/react').then((pwaModule: any) => {
-  useRegisterSW = pwaModule.useRegisterSW;
+import('virtual:pwa-register/react').then((pwaModule: Record<string, unknown>) => {
+  useRegisterSW = pwaModule.useRegisterSW as (() => unknown) | undefined || null;
   
   /**
    * UpdatePrompt component
    * Displays a notification when a new version of the PWA is available
    */
-  UpdatePrompt = (): ReactElement | null => {
+  function UpdatePrompt(): ReactElement | null {
     const {
       needRefresh: [needRefresh, setNeedRefresh],
       updateServiceWorker,
@@ -88,10 +88,12 @@ import('virtual:pwa-register/react').then((pwaModule: any) => {
         )
       )
     );
-  };
+  }
 }).catch(() => {
   // PWA module not available, skip UpdatePrompt
-  UpdatePrompt = (): null => null;
+  function UpdatePrompt(): null {
+    return null;
+  }
 });
 
 /**

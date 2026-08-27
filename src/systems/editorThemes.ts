@@ -184,11 +184,11 @@ export function isValidThemeId(id: string): boolean {
  * Register every custom theme with the given monaco instance. Built-in themes
  * are skipped since Monaco already knows them. Safe to call more than once.
  */
-export function registerEditorThemes(monaco: any): void {
+export function registerEditorThemes(monaco: Record<string, unknown> & { editor?: Record<string, unknown> }): void {
   if (!monaco?.editor?.defineTheme) return;
   for (const theme of EDITOR_THEMES) {
     if (!theme.builtin && theme.data) {
-      monaco.editor.defineTheme(theme.id, theme.data);
+      (monaco.editor as Record<string, unknown> & { defineTheme(id: string, def: ThemeDefinition): void }).defineTheme(theme.id, theme.data);
     }
   }
 }

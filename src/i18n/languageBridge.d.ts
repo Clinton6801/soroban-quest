@@ -5,9 +5,9 @@
 
 /**
  * Set the active language for data loading and localization
- * @param lang - Language code ('en', 'es', 'fr', or 'ja')
+ * @param _lang - Language code ('en', 'es', 'fr', or 'ja')
  */
-export function setActiveLanguage(lang: 'en' | 'es' | 'fr' | 'ja'): void;
+export function setActiveLanguage(_lang: 'en' | 'es' | 'fr' | 'ja'): void;
 
 /**
  * Get the current active language

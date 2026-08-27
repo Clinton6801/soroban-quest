@@ -39,26 +39,26 @@ const MONACO_SEVERITY: Record<string, number> = {
 function resolveWasmUrl(): string | null {
   try {
     // Vite injects import.meta.env; guard for non-Vite (test) contexts.
-    return (import.meta.env as any)?.VITE_SOROBAN_WASM_URL || null;
+    return (import.meta.env as Record<string, unknown>)?.VITE_SOROBAN_WASM_URL || null;
   } catch {
     return null;
   }
 }
 
 interface PendingEntry {
-  resolve: (result: any) => void;
+  resolve: (result: unknown) => void;
   reject: (error: Error) => void;
-  timer: NodeJS.Timeout;
+  timer: ReturnType<typeof setTimeout>;
 }
 
 export interface CompileResult {
   ok: boolean;
   engine: string;
-  diagnostics: any[];
+  diagnostics: unknown[];
   stdout: string;
   stderr: string;
   returnValue: string | null;
-  checkResults: any[];
+  checkResults: unknown[];
   summary: string;
   errorCount: number;
   warningCount: number;
@@ -169,7 +169,7 @@ export class WasmCompiler {
    * @returns structured compile result (never rejects on a
    *   normal timeout/worker failure — it falls back and always resolves).
    */
-  async compileAndRun(code: string, mission?: any): Promise<CompileResult> {
+  async compileAndRun(code: string, mission?: unknown): Promise<CompileResult> {
     const started = nowMs();
     let result: CompileResult;
 
@@ -191,7 +191,7 @@ export class WasmCompiler {
     };
   }
 
-  _compileInWorker(code: string, mission?: any): Promise<CompileResult> {
+  _compileInWorker(code: string, mission?: unknown): Promise<CompileResult> {
     const id = ++this._seq;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -249,9 +249,9 @@ export class WasmCompiler {
    * @returns monaco marker objects
    */
   static toMonacoMarkers(
-    diagnostics: any[] = []
+    diagnostics: unknown[] = []
   ): MonacoMarker[] {
-    return diagnostics.map((d) => ({
+    return (diagnostics as Array<Record<string, unknown>>).map((d) => ({
       severity: MONACO_SEVERITY[d.severity] ?? MONACO_SEVERITY.info,
       message: d.message,
       startLineNumber: d.line || 1,
@@ -265,12 +265,13 @@ export class WasmCompiler {
 }
 
 /** Strip a mission down to the fields the analyzer needs (structured-clone safe). */
-function serializableMission(mission: any): any {
+function serializableMission(mission: unknown): unknown {
   if (!mission) return null;
+  const missionObj = mission as Record<string, unknown>;
   return {
-    id: mission.id,
-    checks: mission.checks,
-    expectedOutput: mission.expectedOutput,
+    id: missionObj.id,
+    checks: missionObj.checks,
+    expectedOutput: missionObj.expectedOutput,
   };
 }
 

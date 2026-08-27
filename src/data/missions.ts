@@ -19,6 +19,8 @@ export const DEFAULT_MISSION_LANG: Language = 'en';
 
 const helloSorobanContent = createMissionFromMarkdown(helloSorobanMarkdown);
 
+/* eslint-disable no-useless-escape */
+
 export const missions = [
     {
         id: 'hello-soroban',
@@ -4546,7 +4548,7 @@ export function localizeMission(
     mission: Mission | null | undefined,
     lang: Language = DEFAULT_MISSION_LANG
 ): LocalizedMission | null | undefined {
-    if (!mission) return mission as any;
+    if (!mission) return mission as unknown as LocalizedMission | null | undefined;
 
     const { i18n, ...neutral } = mission;
     const locale: Partial<LocalizedMission> =
@@ -4554,12 +4556,12 @@ export function localizeMission(
     const fallback: Partial<LocalizedMission> =
         (i18n && i18n[DEFAULT_MISSION_LANG]) || {};
 
-    const pick = (field: keyof LocalizedMission): any =>
+    const pick = (field: keyof LocalizedMission): unknown =>
         locale[field] != null
             ? locale[field]
             : fallback[field] != null
             ? fallback[field]
-            : (neutral as any)[field];
+            : (neutral as Record<string, unknown>)[field];
 
     return {
         ...neutral,

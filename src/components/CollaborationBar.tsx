@@ -14,10 +14,10 @@ const COLORS = ["#06d6a0", "#8b5cf6", "#f59e0b", "#3b82f6", "#ef4444"];
  */
 interface CollaborationManager {
   roomId: string;
-  on: (event: string, handler: (...args: any[]) => void) => void;
+  on: (_event: string, _handler: (..._args: unknown[]) => void) => void;
   connect: () => void;
   destroy: () => void;
-  setCode: (code: string) => void;
+  setCode: (_code: string) => void;
   getCode: () => string;
   getStatus: () => CollaborationStatus;
   getPeers: () => CollaborationUser[];
@@ -51,7 +51,7 @@ interface CollaborationBarProps {
   /** Current code content */
   code: string;
   /** Callback when code changes from remote sources */
-  onCodeChange?: (code: string) => void;
+  onCodeChange?: (_code: string) => void;
   /** Factory function to create collaboration manager */
   managerFactory?: typeof createCollaborationManager;
 }

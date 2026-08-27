@@ -28,31 +28,32 @@ interface ImportValidationResult {
 
 interface ReadFileResult {
   success: boolean;
-  data: any;
+  data: unknown;
   errors: string[];
 }
 
-function createDefaultProfileSlot(index = 0, overrides: any = {}): ProfileSlot {
-  const id = overrides.id || `player-${index + 1}`;
+function createDefaultProfileSlot(index = 0, overrides: Record<string, unknown> = {}): ProfileSlot {
+  const id = (overrides as Record<string, unknown>).id || `player-${index + 1}`;
   return {
-    id,
+    id: id as string,
     profile: {
       ...defaultProfile,
       name: index === 0 ? defaultProfile.name : `Player ${index + 1}`,
-      ...(overrides.profile || {}),
+      ...((overrides as Record<string, unknown>).profile || {}),
     },
     progress: {
       ...getDefaultState(),
-      ...(overrides.progress || {}),
+      ...((overrides as Record<string, unknown>).progress || {}),
     },
   };
 }
 
-function sanitizeProfileSlot(slot: any, index: number): ProfileSlot {
+function sanitizeProfileSlot(slot: unknown, index: number): ProfileSlot {
+  const slotObj = slot as Record<string, unknown>;
   return createDefaultProfileSlot(index, {
-    id: slot?.id || `player-${index + 1}`,
-    profile: slot?.profile,
-    progress: slot?.progress,
+    id: (slotObj?.id as string) || `player-${index + 1}`,
+    profile: slotObj?.profile,
+    progress: slotObj?.progress,
   });
 }
 
@@ -207,23 +208,23 @@ export function addProfile(profile: Partial<Profile> = {}): ProfileSlot[] {
 /* =========================
    COMPRESSION / DECOMPRESSION
 ========================= */
-async function compressData(data: any): Promise<Blob> {
+async function compressData(data: unknown): Promise<Blob> {
   const jsonString = JSON.stringify(data);
   const encoder = new TextEncoder();
   const dataArray = encoder.encode(jsonString);
 
   const blob = new Blob([dataArray]);
-  const compressedStream = new (window as any).CompressionStream("gzip");
-  const compressedStreamResponse = new Response(blob.stream().pipeThrough(compressedStream));
+  const compressedStream = new (window as Record<string, unknown>).CompressionStream("gzip");
+  const compressedStreamResponse = new Response(blob.stream().pipeThrough(compressedStream as unknown as TransformStream<Uint8Array, Uint8Array>));
   const compressedBlob = await compressedStreamResponse.blob();
 
   return compressedBlob;
 }
 
-async function decompressData(blob: Blob): Promise<any> {
-  const decompressedStream = new (window as any).DecompressionStream("gzip");
+async function decompressData(blob: Blob): Promise<unknown> {
+  const decompressedStream = new (window as Record<string, unknown>).DecompressionStream("gzip");
   const decompressedStreamResponse = new Response(
-    blob.stream().pipeThrough(decompressedStream)
+    blob.stream().pipeThrough(decompressedStream as unknown as TransformStream<Uint8Array, Uint8Array>)
   );
   const decompressedBlob =
     await decompressedStreamResponse.blob();
@@ -235,41 +236,44 @@ async function decompressData(blob: Blob): Promise<any> {
 /* =========================
    VALIDATION
 ========================= */
-export function validateImportData(data: any): ImportValidationResult {
+export function validateImportData(data: unknown): ImportValidationResult {
+  const dataObj = data as Record<string, unknown>;
   const errors: string[] = [];
 
-  if (!data) {
+  if (!dataObj) {
     errors.push("Data is empty or null");
     return { isValid: false, errors };
   }
 
-  if (!data.state && !data.profile) {
+  if (!dataObj.state && !dataObj.profile) {
     errors.push("File must contain either state or profile data");
   }
 
-  if (data.state) {
-    if (!Array.isArray(data.state.completedMissions)) {
+  if (dataObj.state) {
+    const state = dataObj.state as Record<string, unknown>;
+    if (!Array.isArray(state.completedMissions)) {
       errors.push("state.completedMissions must be an array");
     }
-    if (!Array.isArray(data.state.badges)) {
+    if (!Array.isArray(state.badges)) {
       errors.push("state.badges must be an array");
     }
-    if (typeof data.state.xp !== "number") {
+    if (typeof state.xp !== "number") {
       errors.push("state.xp must be a number");
     }
-    if (typeof data.state.level !== "number") {
+    if (typeof state.level !== "number") {
       errors.push("state.level must be a number");
     }
-    if (!Array.isArray(data.state.skillPoints)) {
+    if (!Array.isArray(state.skillPoints)) {
       errors.push("state.skillPoints must be an array");
     }
   }
 
-  if (data.profile) {
-    if (typeof data.profile.name !== "string") {
+  if (dataObj.profile) {
+    const profile = dataObj.profile as Record<string, unknown>;
+    if (typeof profile.name !== "string") {
       errors.push("profile.name must be a string");
     }
-    if (typeof data.profile.avatar !== "string") {
+    if (typeof profile.avatar !== "string") {
       errors.push("profile.avatar must be a string");
     }
   }
@@ -387,9 +391,10 @@ export async function exportProgress(): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
-export async function importProgress(data: any): Promise<any> {
-  if (data.state) {
-    saveProgress({ ...getDefaultState(), ...data.state });
+export async function importProgress(data: unknown): Promise<Record<string, unknown> | null> {
+  const dataObj = data as Record<string, unknown>;
+  if (dataObj.state) {
+    saveProgress({ ...getDefaultState(), ...(dataObj.state as Record<string, unknown>) });
   }
 
   if (data.profile) {
@@ -427,7 +432,7 @@ export async function readAndValidateFile(
       success: false,
       data: null,
       errors: [
-        (error as any)?.message || "Failed to read or parse file",
+        (error as Record<string, unknown>)?.message || "Failed to read or parse file",
       ],
     };
   }

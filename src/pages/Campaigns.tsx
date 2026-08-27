@@ -3,7 +3,7 @@
    with lore, progression gates, hero images
    ========================================== */
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 
 import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
@@ -23,7 +23,7 @@ export default function Campaigns() {
   const [progress, setProgress] = useState(loadProgress());
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [showLoreModal, setShowLoreModal] = useState(false);
-  const [firstVisit, setFirstVisit] = useState(false);
+  const [, _setFirstVisit] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const localizedCampaigns = useMemo(
@@ -51,6 +51,11 @@ export default function Campaigns() {
     const handleStorageChange = () => setProgress(loadProgress());
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setShowLoreModal(false);
+    _setFirstVisit(false);
   }, []);
 
   // Focus Trapping for the Lore Modal attached directly to Element Context instead of Window
@@ -92,21 +97,16 @@ export default function Campaigns() {
 
     modalElement.addEventListener("keydown", handleKeyDown);
     return () => modalElement.removeEventListener("keydown", handleKeyDown);
-  }, [showLoreModal]);
+  }, [showLoreModal, closeModal]);
 
   const handleCampaignClick = (campaign: typeof localizedCampaigns[number]): void => {
     const visitedKey = `campaign-first-visit-${campaign.id}`;
     if (!localStorage.getItem(visitedKey)) {
       localStorage.setItem(visitedKey, "true");
-      setFirstVisit(true);
+      _setFirstVisit(true);
       setShowLoreModal(true);
     }
     setSelectedCampaignId(campaign.id);
-  };
-
-  const closeModal = () => {
-    setShowLoreModal(false);
-    setFirstVisit(false);
   };
 
   const currentLevel = getLevelFromXP(progress.xp || 0);

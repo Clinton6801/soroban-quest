@@ -9,7 +9,7 @@ export interface ActivityEntry {
   id: string;
   timestamp: string;
   type: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   message: string;
 }
 
@@ -37,7 +37,7 @@ export const ACTIVITY_TYPES = {
  */
 export function logActivity(
   type: string,
-  data: Record<string, any> = {},
+  data: Record<string, unknown> = {},
   message = ""
 ): void {
   try {

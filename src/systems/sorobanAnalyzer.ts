@@ -281,32 +281,33 @@ function checkSorobanScaffolding(code: string): Diagnostic[] {
  */
 function checkMissionSemantics(
   code: string,
-  mission: any
-): { diagnostics: Diagnostic[]; checkResults: any[] } {
-  if (!mission?.checks?.length)
+  mission: unknown
+): { diagnostics: Diagnostic[]; checkResults: unknown[] } {
+  const missionObj = mission as Record<string, unknown>;
+  if (!(missionObj?.checks as unknown[])?.length)
     return { diagnostics: [], checkResults: [] };
 
   const diagnostics: Diagnostic[] = [];
-  const { results } = validateCode(code, mission.checks);
+  const { results } = validateCode(code, missionObj.checks as unknown[]);
 
   for (const r of results) {
-    if (r.passed) continue;
+    if ((r as Record<string, unknown>).passed) continue;
     // Best-effort anchor to a relevant line.
     let loc = { line: 1, column: 1, endColumn: 2 };
-    const check = r.check || {};
-    if (check.name) loc = locate(code, check.name);
-    else if (check.pattern) loc = locate(code, check.pattern);
-    else if (check.typeName) loc = locate(code, check.typeName);
-    else if (check.module) loc = locate(code, check.module);
+    const check = (r as Record<string, unknown>).check as Record<string, unknown> || {};
+    if ((check as Record<string, unknown>).name) loc = locate(code, (check as Record<string, unknown>).name as string);
+    else if ((check as Record<string, unknown>).pattern) loc = locate(code, (check as Record<string, unknown>).pattern as string);
+    else if ((check as Record<string, unknown>).typeName) loc = locate(code, (check as Record<string, unknown>).typeName as string);
+    else if ((check as Record<string, unknown>).module) loc = locate(code, (check as Record<string, unknown>).module as string);
 
     diagnostics.push(
       makeDiagnostic({
         severity: DiagnosticSeverity.Error,
-        message: r.message.replace(/^✗\s*/, ""),
+        message: ((r as Record<string, unknown>).message as string).replace(/^✗\s*/, ""),
         line: loc.line,
         column: loc.column,
         endColumn: loc.endColumn,
-        code: `check::${check.type || "mission"}`,
+        code: `check::${((check as Record<string, unknown>).type as string) || "mission"}`,
       })
     );
   }
@@ -321,7 +322,7 @@ export interface AnalysisResult {
   stdout: string;
   stderr: string;
   returnValue: string | null;
-  checkResults: any[];
+  checkResults: unknown[];
   summary: string;
   errorCount: number;
   warningCount: number;
@@ -334,7 +335,7 @@ export interface AnalysisResult {
  * @param mission optional mission with `checks` / `expectedOutput`
  * @returns structured analysis result
  */
-export function analyze(code: string, mission?: any): AnalysisResult {
+export function analyze(code: string, mission?: unknown): AnalysisResult {
   const source = typeof code === "string" ? code : "";
   const diagnostics: Diagnostic[] = [];
 
@@ -370,8 +371,8 @@ export function analyze(code: string, mission?: any): AnalysisResult {
 
 function finalize(
   diagnostics: Diagnostic[],
-  mission: any,
-  checkResults: any[],
+  mission: unknown,
+  checkResults: unknown[],
   source: string
 ): AnalysisResult {
   const errors = diagnostics.filter(

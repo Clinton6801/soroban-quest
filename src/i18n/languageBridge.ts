@@ -11,7 +11,7 @@ export const SUPPORTED_LANGS = ['en', 'es', 'fr', 'zh-CN'] as const;
 export const DEFAULT_LANG = 'en';
 
 type SupportedLang = (typeof SUPPORTED_LANGS)[number];
-type LanguageChangeListener = (lang: SupportedLang) => void;
+type LanguageChangeListener = (_lang: SupportedLang) => void;
 
 let activeLanguage: SupportedLang = DEFAULT_LANG;
 const listeners = new Set<LanguageChangeListener>();
@@ -22,9 +22,9 @@ export function getActiveLanguage(): SupportedLang {
 }
 
 /** Update the active language. Called by the LanguageProvider. */
-export function setActiveLanguage(lang: SupportedLang): void {
-    if (!SUPPORTED_LANGS.includes(lang) || lang === activeLanguage) return;
-    activeLanguage = lang;
+export function setActiveLanguage(_lang: SupportedLang): void {
+    if (!SUPPORTED_LANGS.includes(_lang) || _lang === activeLanguage) return;
+    activeLanguage = _lang;
     for (const fn of listeners) {
         try {
             fn(activeLanguage);

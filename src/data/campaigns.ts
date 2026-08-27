@@ -7,7 +7,7 @@
  * `i18n[locale]`. Use `localizeCampaign(campaign, lang)` to get a flat, render-ready object.
  */
 
-import type { Campaign, Language, LocalizedMission, MissionLocale } from '../types/game';
+import type { Campaign, Language, MissionLocale } from '../types/game';
 
 export const DEFAULT_CAMPAIGN_LANG: Language = 'en';
 
@@ -260,7 +260,7 @@ Maîtrisez la gestion de l'état pour accéder au **Chapitre 3 : Forge de Jetons
  * Localizable fields resolve from `campaign.i18n[lang]`, falling back to English.
  */
 export function localizeCampaign(campaign: CampaignWithI18n, lang: Language = DEFAULT_CAMPAIGN_LANG): Campaign & { title: string; description: string; lore: string } {
-  if (!campaign) return campaign as any;
+  if (!campaign) return campaign as Campaign & { title: string; description: string; lore: string };
 
   const locale = campaign.i18n?.[lang] || campaign.i18n?.[DEFAULT_CAMPAIGN_LANG] || {};
   const fallback = campaign.i18n?.[DEFAULT_CAMPAIGN_LANG] || {};

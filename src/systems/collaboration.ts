@@ -33,7 +33,7 @@ function createId(prefix = "collab"): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function normalizeRoomId(roomId: any): string {
+function normalizeRoomId(roomId: string): string {
   return String(roomId || "")
     .trim()
     .replace(/[^a-zA-Z0-9_-]/g, "-")
@@ -95,26 +95,26 @@ interface CollaborationManagerOptions {
   missionId?: string;
   user?: Partial<User>;
   initialCode?: string;
-  providerFactory?: (roomName: string, doc: Y.Doc, options: any) => any;
-  awarenessFactory?: () => any;
+  providerFactory?: (roomName: string, doc: Y.Doc, options: Record<string, unknown>) => unknown;
+  awarenessFactory?: () => unknown;
   signaling?: string[];
 }
 
 type ListenerType = "code" | "status" | "peers" | "conflict";
-type Listener = (payload: any) => void;
+type Listener = (payload: unknown) => void;
 
 export class CollaborationManager {
   roomId: string;
   missionId: string;
   user: User;
   signaling: string[];
-  providerFactory?: (roomName: string, doc: Y.Doc, options: any) => any;
-  awarenessFactory?: () => any;
+  providerFactory?: (roomName: string, doc: Y.Doc, options: Record<string, unknown>) => unknown;
+  awarenessFactory?: () => unknown;
   doc: Y.Doc;
   code: Y.Text;
-  meta: Y.Map<any>;
-  provider: any;
-  awareness: any;
+  meta: Y.Map<unknown>;
+  provider: unknown;
+  awareness: unknown;
   connected: boolean;
   destroyed: boolean;
   lastSyncedCode: string;
@@ -171,8 +171,9 @@ export class CollaborationManager {
       : new WebrtcProvider(roomName, this.doc, { signaling: this.signaling });
     this.awareness = this.provider.awareness || this.awarenessFactory?.();
 
-    this.provider.on?.("status", (event: any) => {
-      this.connected = event.status === "connected";
+    this.provider.on?.("status", (event: unknown) => {
+      const eventObj = event as { status?: string };
+      this.connected = eventObj?.status === "connected";
       this.emit("status", this.getStatus());
     });
 
@@ -258,8 +259,8 @@ export class CollaborationManager {
 
   getPeers(): User[] {
     if (!this.awareness?.getStates) return [];
-    return Array.from(this.awareness.getStates().values())
-      .map((state: any) => state.user)
+    return Array.from(this.awareness.getStates().values() as Iterable<{ user?: User }>)
+      .map((state) => state.user)
       .filter(Boolean);
   }
 
@@ -268,7 +269,7 @@ export class CollaborationManager {
     return () => this.listeners[type]?.delete(listener);
   }
 
-  emit(type: ListenerType, payload: any): void {
+  emit(type: ListenerType, payload: unknown): void {
     this.listeners[type]?.forEach((listener) => listener(payload));
   }
 }

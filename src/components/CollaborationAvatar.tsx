@@ -29,7 +29,7 @@ interface CollaborationAvatarProps {
 export default function CollaborationAvatar({ user, active = false }: CollaborationAvatarProps): ReactElement {
   const initial = user?.name?.trim()?.[0]?.toUpperCase() || "?";
   const style: CSSProperties = {
-    // @ts-ignore - CSS custom properties
+    // @ts-expect-error - CSS custom properties
     "--avatar-color": user?.color || "#06d6a0",
     alignItems: "center",
     background: "color-mix(in srgb, var(--avatar-color) 18%, transparent)",

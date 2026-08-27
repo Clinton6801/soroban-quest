@@ -13,15 +13,15 @@ interface LanguageSelectorProps {
   /** Whether the language dropdown is open */
   langOpen: boolean;
   /** Callback to toggle language dropdown */
-  setLangOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
+  setLangOpen: (_open: boolean | ((_prev: boolean) => boolean)) => void;
   /** Callback when language is changed */
-  handleLanguageChange: (code: string) => void;
+  handleLanguageChange: (_code: string) => void;
   /** Current language code */
   language: string;
   /** Available language options */
   languages: LanguageOption[];
   /** Translation function */
-  t: (key: string) => string;
+  t: (_key: string) => string;
 }
 
 /**
