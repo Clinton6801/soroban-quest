@@ -1,34 +1,58 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, CheckCircle, Clock, Trophy, Filter } from 'lucide-react';
 import { useTranslation } from '../i18n/useTranslation';
 import { useGameState } from '../systems/GameStateContext';
 import { missions } from '../data/missions';
 import type { Mission } from '../types/game';
+import { theoryQuests, type TheoryQuest } from '../data/theoryQuests';
 import './Quests.css';
 
-export default function Quests() {
+interface QuestItem {
+  id: string;
+  type: string;
+  campaign?: string | number;
+  chapter?: number;
+  difficulty?: string;
+  completed?: boolean;
+  xpReward?: number;
+  title: string;
+  description: string;
+  path: string;
+}
+
+export default function Quests(): ReactElement {
   const { t, language } = useTranslation();
   const { progress } = useGameState();
 
-  const allMissions = missions || [];
+  const allMissions: QuestItem[] = [...(missions || []), ...(theoryQuests || [])].map((item: Mission | TheoryQuest) => ({
+    id: item.id,
+    type: item.type || 'mission',
+    campaign: 'campaign' in item ? item.campaign : undefined,
+    chapter: item.chapter,
+    difficulty: item.difficulty,
+    completed: 'completed' in item ? item.completed : undefined,
+    xpReward: item.xpReward,
+    title: item.i18n?.[language]?.title || item.i18n?.en?.title || (item as unknown as Record<string, unknown>).title || item.id,
+    description: item.i18n?.[language]?.story || item.i18n?.en?.story || (item as unknown as Record<string, unknown>).story || '',
+    path: item.type === 'theory' ? `/theory/${item.id}` : `/mission/${item.id}`,
+  }));
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCampaign, setSelectedCampaign] = useState('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
-  const [completionStatus, setCompletionStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [completionStatus, setCompletionStatus] = useState<string>('all');
 
-  const getLocalizedMission = (mission: Mission): { title: string; description: string } => {
-    const langData = mission.i18n?.[language] || mission.i18n?.en || {};
+  const getLocalizedMission = (mission: QuestItem): { title: string; description: string } => {
     return {
-      title: langData.title || mission.id,
-      description: langData.story || langData.description || '',
+      title: mission.title,
+      description: mission.description,
     };
   };
 
   const uniqueCampaigns = useMemo(() => {
     const campaignsSet = new Set(allMissions.map((m) => m.campaign || m.chapter).filter(Boolean));
-    return Array.from(campaignsSet);
+    return Array.from(campaignsSet).map(String);
   }, [allMissions]);
 
   const filteredMissions = useMemo(() => {
@@ -68,9 +92,9 @@ export default function Quests() {
       {/* Page Header */}
       <div className="quests-header">
         <h1>
-          <Trophy className="quests-title-icon" size={28} /> {t('quests.title', 'Quest Catalog')}
+          <Trophy className="quests-title-icon" size={28} /> {t('quests.title')}
         </h1>
-        <p>{t('quests.subtitle', 'Browse, search, and filter all available missions.')}</p>
+        <p>{t('quests.subtitle')}</p>
       </div>
 
       {/* Filter and Search Toolbar */}
@@ -79,7 +103,7 @@ export default function Quests() {
           <Search className="quests-search-icon" size={18} />
           <input
             type="text"
-            placeholder={t('quests.searchPlaceholder', 'Search missions...')}
+            placeholder={t('quests.searchPlaceholder')}
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>): void => setSearchQuery(e.target.value)}
             className="quests-input"
@@ -91,7 +115,7 @@ export default function Quests() {
           onChange={(e: React.ChangeEvent<HTMLSelectElement>): void => setSelectedCampaign(e.target.value)}
           className="quests-select"
         >
-          <option value="all">{t('quests.allCampaigns', 'All Campaigns')}</option>
+          <option value="all">{t('quests.allCampaigns')}</option>
           {uniqueCampaigns.map((campaign) => (
             <option key={campaign} value={campaign}>
               Chapter {campaign}
@@ -101,23 +125,23 @@ export default function Quests() {
 
         <select
           value={selectedDifficulty}
-          onChange={(e) => setSelectedDifficulty(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>): void => setSelectedDifficulty(e.target.value)}
           className="quests-select"
         >
-          <option value="all">{t('quests.allDifficulties', 'All Difficulties')}</option>
-          <option value="beginner">{t('quests.beginner', 'Beginner')}</option>
-          <option value="intermediate">{t('quests.intermediate', 'Intermediate')}</option>
-          <option value="advanced">{t('quests.advanced', 'Advanced')}</option>
+          <option value="all">{t('quests.allDifficulties')}</option>
+          <option value="beginner">{t('quests.beginner')}</option>
+          <option value="intermediate">{t('quests.intermediate')}</option>
+          <option value="advanced">{t('quests.advanced')}</option>
         </select>
 
         <select
           value={completionStatus}
-          onChange={(e) => setCompletionStatus(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>): void => setCompletionStatus(e.target.value)}
           className="quests-select"
         >
-          <option value="all">{t('quests.allStatus', 'All Status')}</option>
-          <option value="completed">{t('quests.completed', 'Completed')}</option>
-          <option value="incomplete">{t('quests.incomplete', 'Incomplete')}</option>
+          <option value="all">{t('quests.allStatus')}</option>
+          <option value="completed">{t('quests.completed')}</option>
+          <option value="incomplete">{t('quests.incomplete')}</option>
         </select>
       </div>
 
@@ -128,12 +152,12 @@ export default function Quests() {
           const campaignBadgeText = mission.campaign || `Chapter ${mission.chapter || 1}`;
 
           return (
-            <Link key={mission.id} to={`/mission/${mission.id}`} className="quest-card">
+            <Link key={mission.id} to={mission.path} className="quest-card">
               <div className="quest-card-top">
-                <span className="quest-campaign-badge">{campaignBadgeText}</span>
+                <span className="quest-campaign-badge">{mission.type === 'theory' ? 'Theory' : campaignBadgeText}</span>
                 {isCompleted && (
                   <span className="quest-completed-badge">
-                    <CheckCircle size={14} /> {t('quests.done', 'Completed')}
+                    <CheckCircle size={14} /> {t('quests.done')}
                   </span>
                 )}
               </div>
@@ -155,7 +179,7 @@ export default function Quests() {
       {filteredMissions.length === 0 && (
         <div className="quests-empty">
           <Filter className="quests-empty-icon" size={40} />
-          <p>{t('quests.noResults', 'No missions found matching your criteria.')}</p>
+          <p>{t('quests.noResults')}</p>
         </div>
       )}
     </div>

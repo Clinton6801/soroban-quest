@@ -1,6 +1,25 @@
 export const DEFAULT_THEORY_QUEST_LANG = 'en';
 
-export const theoryQuests = [
+export interface TheoryQuestI18n {
+  title: string;
+  story: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+}
+
+export interface TheoryQuest {
+  id: string;
+  type: 'theory';
+  chapter: number;
+  order: number;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  xpReward: number;
+  i18n: Record<string, Partial<TheoryQuestI18n>>;
+}
+
+export const theoryQuests: TheoryQuest[] = [
   {
     id: 'fund-account-model',
     type: 'theory',
@@ -66,7 +85,7 @@ Trustlines let an account opt into holding a specific asset issued by a counterp
           'To allow a Soroban contract to skip authorization checks.',
         ],
         correctAnswer: 'To let an account explicitly approve holding and transferring a specific asset.',
-        explanation: 'A trustline is an authorization entry between an account and an asset issuer. It allows the account to hold, receive, and send that asset under the issuer’s rules.',
+        explanation: 'A trustline is an authorization entry between an account and an asset issuer. It allows the account to hold, receive, and send that asset under the issuer\'s rules.',
       },
       es: {
         title: 'Trustlines',
@@ -137,7 +156,7 @@ Cuando una transacción está cerca de caducar o compite con otro tráfico de re
         title: 'Consensus Basics',
         story: `# 🧭 Consensus in Stellar
 
-Stellar’s consensus protocol is designed to reach agreement among validators. The point is not to require every node to agree on everything, but to reach a quorum-based decision efficiently.`,
+Stellar's consensus protocol is designed to reach agreement among validators. The point is not to require every node to agree on everything, but to reach a quorum-based decision efficiently.`,
         question: 'What is the main role of consensus in Stellar?',
         options: [
           'To make every validator run the same contract bytecode in isolation.',
@@ -207,32 +226,40 @@ Los contratos de Soroban persisten datos mediante almacenamiento. La idea import
   },
 ];
 
-export function localizeTheoryQuest(quest, lang = DEFAULT_THEORY_QUEST_LANG) {
+interface LocalizedTheoryQuest extends Partial<TheoryQuestI18n> {
+  id: string;
+  type: string;
+  chapter: number;
+  order: number;
+  difficulty: string;
+  xpReward: number;
+}
+
+export function localizeTheoryQuest(quest: TheoryQuest | null | undefined, lang: string = DEFAULT_THEORY_QUEST_LANG): LocalizedTheoryQuest | null | undefined {
   if (!quest) return quest;
 
   const { i18n, ...neutral } = quest;
   const locale = (i18n && (i18n[lang] || i18n[DEFAULT_THEORY_QUEST_LANG])) || {};
   const fallback = (i18n && i18n[DEFAULT_THEORY_QUEST_LANG]) || {};
 
-  const pick = (field) =>
+  const pick = (field: keyof TheoryQuestI18n): unknown =>
     locale[field] != null
       ? locale[field]
       : fallback[field] != null
         ? fallback[field]
-        : neutral[field];
+        : neutral[field as never];
 
   return {
     ...neutral,
-    title: pick('title'),
-    story: pick('story'),
-    question: pick('question'),
-    options: pick('options') || [],
-    correctAnswer: pick('correctAnswer') ?? (Array.isArray(pick('correctAnswers')) ? pick('correctAnswers')[0] : undefined),
-    correctAnswers: pick('correctAnswers') || (pick('correctAnswer') ? [pick('correctAnswer')] : []),
-    explanation: pick('explanation'),
+    title: (pick('title') as string) || '',
+    story: (pick('story') as string) || '',
+    question: (pick('question') as string) || '',
+    options: (pick('options') as string[]) || [],
+    correctAnswer: (pick('correctAnswer') as string) || '',
+    explanation: (pick('explanation') as string) || '',
   };
 }
 
-export function localizeTheoryQuests(list, lang = DEFAULT_THEORY_QUEST_LANG) {
-  return (list || []).map((quest) => localizeTheoryQuest(quest, lang));
+export function localizeTheoryQuests(list: TheoryQuest[] | null | undefined, lang: string = DEFAULT_THEORY_QUEST_LANG): LocalizedTheoryQuest[] {
+  return (list || []).map((quest) => localizeTheoryQuest(quest, lang)).filter((q): q is LocalizedTheoryQuest => q !== null && q !== undefined);
 }

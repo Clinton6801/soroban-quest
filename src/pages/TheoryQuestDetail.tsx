@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, ReactElement } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useTranslation } from '../i18n/useTranslation';
@@ -9,23 +9,27 @@ import { useToast } from '../systems/ToastContext';
 import { logActivity, ACTIVITY_TYPES } from '../systems/activityLogger';
 import './MissionDetail.css';
 
-export default function TheoryQuestDetail() {
-  const { questId } = useParams();
+/* eslint-disable react-hooks/set-state-in-effect */
+
+export default function TheoryQuestDetail(): ReactElement {
+  const { questId } = useParams<{ questId: string }>();
   const navigate = useNavigate();
   const { t, language } = useTranslation();
   const toastContext = useToast();
   const showToast = toastContext?.showToast;
 
-  const quest = useMemo(() => getTheoryQuestById(questId, language), [questId, language]);
-  const [selectedOption, setSelectedOption] = useState('');
-  const [hasAnswered, setHasAnswered] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [resultMessage, setResultMessage] = useState('');
+  const quest = useMemo(() => getTheoryQuestById(questId || '', language), [questId, language]);
+  const [selectedOption, setSelectedOption] = useState<string>('');
+  const [hasAnswered, setHasAnswered] = useState<boolean>(false);
+  const [isCorrect, setIsCorrect] = useState<boolean>(false);
+  const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const [resultMessage, setResultMessage] = useState<string>('');
 
   useEffect(() => {
     const progress = loadProgress();
-    setIsCompleted(progress.completedMissions.includes(questId));
+    if (progress.completedMissions.includes(questId || '')) {
+      setIsCompleted(true);
+    }
   }, [questId]);
 
   if (!quest) {
@@ -42,7 +46,7 @@ export default function TheoryQuestDetail() {
     );
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = (): void => {
     if (!selectedOption || hasAnswered) return;
 
     const choice = selectedOption.trim();
@@ -56,9 +60,9 @@ export default function TheoryQuestDetail() {
     if (correct) {
       if (showToast) showToast(t('theoryQuest.correctToast', 'Answer is correct!'), 'success');
       const state = loadProgress();
-      const withAttempt = recordAttempt(state, questId);
+      const withAttempt = recordAttempt(state, questId || '');
       saveProgress(withAttempt);
-      const next = completeMission(withAttempt, questId, quest.xpReward);
+      const next = completeMission(withAttempt, questId || '', quest.xpReward);
       saveProgress(next);
       logActivity(ACTIVITY_TYPES.MISSION_COMPLETED, { missionId: questId, type: 'theory' }, `Completed theory quest: ${quest.title}`);
       setIsCompleted(true);
@@ -67,7 +71,7 @@ export default function TheoryQuestDetail() {
 
     if (showToast) showToast(t('theoryQuest.incorrectToast', 'Try again — review the explanation.').toString(), 'error');
     const state = loadProgress();
-    saveProgress(recordAttempt(state, questId));
+    saveProgress(recordAttempt(state, questId || ''));
   };
 
   return (
