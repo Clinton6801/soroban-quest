@@ -292,16 +292,16 @@ export function checkBadges(state) {
   const newBadges = [];
   for (const badge of BADGES) {
     if (!state.badges.includes(badge.id) && badge.condition(state)) {
-  newBadges.push(badge.id);
+      newBadges.push(badge.id);
 
-  playSound(SOUND_TYPES.BADGE_EARNED);
+      playSound(SOUND_TYPES.BADGE_EARNED);
 
-  logActivity(
-    ACTIVITY_TYPES.BADGE_EARNED,
-    { badgeId: badge.id, badgeName: badge.name },
-    `Earned the "${badge.name}" badge!`,
-  );
-}
+      logActivity(
+        ACTIVITY_TYPES.BADGE_EARNED,
+        { badgeId: badge.id, badgeName: badge.name },
+        `Earned the "${badge.name}" badge!`,
+      );
+    }
   }
 
   return {

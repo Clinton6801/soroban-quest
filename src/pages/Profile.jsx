@@ -145,7 +145,6 @@ export default function Profile() {
     setImportStatus(statusMsg);
 
     playClick();
-    showToast('Progress configuration data exported!', 'success');
     showToast(statusMsg, 'success');
     logActivity(ACTIVITY_TYPES.EXPORT, {}, t('profile.data.log.exported'));
 
