@@ -64,7 +64,7 @@ export default function Shop() {
   const { progress, updateProgress } = useGameState();
   const { showToast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const purchasedItems = progress.purchasedItems || [];
+  const ownedItems = progress.inventory?.owned || [];
 
   const categories = [
     { id: 'all', name: 'shop.categories.all' },
@@ -78,7 +78,7 @@ export default function Shop() {
     : SHOP_ITEMS.filter(item => item.category === selectedCategory);
 
   const handlePurchase = (item) => {
-    if (purchasedItems.includes(item.id)) {
+    if (ownedItems.includes(item.id)) {
       showToast(t('shop.alreadyPurchased'), 'error');
       return;
     }
@@ -90,7 +90,10 @@ export default function Shop() {
     }
 
     const newProgress = spendGold(progress, item.price);
-    newProgress.purchasedItems = [...(progress.purchasedItems || []), item.id];
+    // Initialize inventory if undefined (should be covered by migration but for new profiles)
+    if (!newProgress.inventory) newProgress.inventory = { owned: [], equipped: [] };
+    
+    newProgress.inventory.owned = [...ownedItems, item.id];
     logActivity(ACTIVITY_TYPES.SHOP_PURCHASE, { itemId: item.id, price: item.price }, `Purchased ${item.name} for ${item.price} gold`);
     updateProgress(newProgress);
     showToast(t('shop.purchaseSuccess', { item: t(`shop.items.${item.name}`) }), 'success');
@@ -125,13 +128,13 @@ export default function Shop() {
 
       <div className="shop-grid">
         {filteredItems.map((item) => {
-          const isPurchased = purchasedItems.includes(item.id);
+          const isOwned = ownedItems.includes(item.id);
           const canAfford = (progress.gold || 0) >= item.price;
 
           return (
             <article
               key={item.id}
-              className={`shop-item ${isPurchased ? 'purchased' : ''} ${!canAfford && !isPurchased ? 'unaffordable' : ''}`}
+              className={`shop-item ${isOwned ? 'purchased' : ''} ${!canAfford && !isOwned ? 'unaffordable' : ''}`}
             >
               <div className="shop-item-icon">{item.icon}</div>
               <div className="shop-item-content">
@@ -143,16 +146,16 @@ export default function Shop() {
               </div>
               <button
                 type="button"
-                className={`shop-item-btn ${isPurchased ? 'purchased' : 'btn-primary'}`}
+                className={`shop-item-btn ${isOwned ? 'purchased' : 'btn-primary'}`}
                 onClick={() => handlePurchase(item)}
-                disabled={isPurchased || !canAfford}
+                disabled={isOwned || !canAfford}
                 aria-label={
-                  isPurchased
+                  isOwned
                     ? t('shop.ariaPurchased', { item: t(`shop.items.${item.name}`) })
                     : t('shop.ariaPurchase', { item: t(`shop.items.${item.name}`), price: item.price })
                 }
               >
-                {isPurchased ? t('shop.purchased') : t('shop.buy')}
+                {isOwned ? t('shop.purchased') : t('shop.buy')}
               </button>
             </article>
           );

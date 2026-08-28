@@ -15,7 +15,7 @@ vi.mock("../activityLogger", () => {
 
 import {
   xpForLevel,
-  _xpForNextLevel,
+  xpForNextLevel,
   getLevelFromXP,
   getRankTitle,
   getXPProgress,
@@ -25,7 +25,7 @@ import {
   checkBadges,
   updateStreak,
   getDefaultState,
-  _BADGES,
+  BADGES,
 } from "../gameEngine";
 
 describe("gameEngine core logic", () => {
@@ -249,6 +249,29 @@ describe("gameEngine core logic", () => {
       expect(p.needed).toBeGreaterThan(0);
       expect(p.percentage).toBeGreaterThanOrEqual(0);
       expect(p.percentage).toBeLessThanOrEqual(100);
+    });
+  });
+
+  describe("inventory and equip logic", () => {
+    it("awardXP doubles XP when xp-boost is equipped", () => {
+      const s = { ...baseState, inventory: { owned: ['xp-boost'], equipped: ['xp-boost'] }, xp: 0, level: 1 };
+      const newState = awardXP(s, 50);
+      expect(newState.xp).toBe(100);
+    });
+
+    it("updateStreak uses streak-freeze when equipped", () => {
+      const today = new Date().toISOString().split("T")[0];
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      
+      const s = { 
+        ...baseState, 
+        lastLogin: twoDaysAgo.toISOString(), 
+        streak: 5, 
+        inventory: { owned: ['streak-freeze'], equipped: ['streak-freeze'] } 
+      };
+      const out = updateStreak(s);
+      expect(out.streak).toBe(5); // Streak freeze worked, streak preserved
     });
   });
 });
