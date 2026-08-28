@@ -2,6 +2,7 @@
    Game Engine — XP, Levels, Badges
    ========================================== */
 import { logActivity, ACTIVITY_TYPES } from "./activityLogger";
+import { playSound, SOUND_TYPES } from "./soundManager";
 
 
 const LEVEL_BASE = 500;
@@ -203,7 +204,11 @@ export function awardXP(state, amount) {
   const newLevel = getLevelFromXP(newXP);
   const leveledUp = newLevel > state.level;
 
+  playSound(SOUND_TYPES.XP_GAINED);
+
   if (leveledUp) {
+    playSound(SOUND_TYPES.LEVEL_UP);
+
     logActivity(ACTIVITY_TYPES.LEVEL_UP, { level: newLevel }, `Reached Level ${newLevel}!`);
   }
 
@@ -221,11 +226,16 @@ export function awardXP(state, amount) {
   return nextState;
 }
 
+
 export const GOLD_PER_MISSION_RATIO = 0.5;
 
 export function awardGold(state, xpReward) {
   const goldEarned = Math.floor(xpReward * GOLD_PER_MISSION_RATIO);
+
+  playSound(SOUND_TYPES.GOLD_EARNED);
+
   logActivity(ACTIVITY_TYPES.GOLD_EARNED, { amount: goldEarned }, `Earned ${goldEarned} gold!`);
+
   return {
     ...state,
     gold: (state.gold || 0) + goldEarned,
@@ -261,6 +271,8 @@ export function completeMission(state, missionId, xpReward) {
   newState = awardGold(newState, xpReward);
   newState = checkBadges(newState);
 
+  playSound(SOUND_TYPES.MISSION_COMPLETE);
+
   logActivity(ACTIVITY_TYPES.MISSION_COMPLETED, { missionId }, `Successfully completed mission: ${missionId}`);
 
   return newState;
@@ -280,9 +292,16 @@ export function checkBadges(state) {
   const newBadges = [];
   for (const badge of BADGES) {
     if (!state.badges.includes(badge.id) && badge.condition(state)) {
-      newBadges.push(badge.id);
-      logActivity(ACTIVITY_TYPES.BADGE_EARNED, { badgeId: badge.id, badgeName: badge.name }, `Earned the "${badge.name}" badge!`);
-    }
+  newBadges.push(badge.id);
+
+  playSound(SOUND_TYPES.BADGE_EARNED);
+
+  logActivity(
+    ACTIVITY_TYPES.BADGE_EARNED,
+    { badgeId: badge.id, badgeName: badge.name },
+    `Earned the "${badge.name}" badge!`,
+  );
+}
   }
 
   return {

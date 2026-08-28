@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Keyboard } from 'lucide-react';
+import { Menu, X, Sun, Moon, Keyboard, Volume2, VolumeX } from 'lucide-react';
+import {
+  isMuted,
+  toggleMute,
+  unlockAudio,
+} from '../systems/soundManager';
 import { useTranslation } from '../i18n/useTranslation';
 import { useGameState } from '../systems/GameStateContext';
 import LanguageSelector from './LanguageSelector';
@@ -9,6 +14,7 @@ import { resetOnboarding } from './Onboarding';
 export default function Navbar({ onOpenShortcuts }) {
   const [isOpen, setIsOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [muted, setMuted] = useState(() => isMuted());
   const location = useLocation();
   const { profile, progress } = useGameState();
   const langRef = useRef(null);
@@ -48,6 +54,14 @@ export default function Navbar({ onOpenShortcuts }) {
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  const handleToggleMute = () => {
+    const nextMuted = toggleMute();
+    setMuted(nextMuted);
+
+    // Unlock AudioContext from a user gesture where supported.
+    unlockAudio();
   };
 
   const handleLanguageChange = (code) => {
@@ -133,12 +147,24 @@ export default function Navbar({ onOpenShortcuts }) {
           />
 
           <button
+            type="button"
             onClick={toggleTheme}
             className="btn-ghost"
             style={{ padding: '0.5rem', borderRadius: '50%' }}
             aria-label={t('common.toggleTheme')}
           >
             {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleToggleMute}
+            className="btn-ghost"
+            style={{ padding: '0.5rem', borderRadius: '50%' }}
+            aria-label={muted ? 'Unmute sounds' : 'Mute sounds'}
+            title={muted ? 'Unmute sounds' : 'Mute sounds'}
+          >
+            {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
           </button>
 
           {/* KEYBOARD SHORTCUTS BUTTON */}
@@ -234,13 +260,36 @@ export default function Navbar({ onOpenShortcuts }) {
               t={t}
             />
 
+            <LanguageSelector
+              idSuffix="desktop"
+              langRef={langRef}
+              langOpen={langOpen}
+              setLangOpen={setLangOpen}
+              handleLanguageChange={handleLanguageChange}
+              language={language}
+              languages={languages}
+              t={t}
+            />
+
             <button
+              type="button"
               onClick={toggleTheme}
               className="btn-ghost"
               style={{ padding: '0.5rem', borderRadius: '50%' }}
               aria-label={t('common.toggleTheme')}
             >
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleToggleMute}
+              className="btn-ghost"
+              style={{ padding: '0.5rem', borderRadius: '50%' }}
+              aria-label={muted ? 'Unmute sounds' : 'Mute sounds'}
+              title={muted ? 'Unmute sounds' : 'Mute sounds'}
+            >
+              {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
             </button>
 
             {/* KEYBOARD SHORTCUTS BUTTON (MOBILE) */}

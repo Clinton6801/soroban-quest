@@ -105,7 +105,7 @@ function checkSyntaxBasics(code) {
 
 function checkStructure(code, _mission) {
     // Must have at least one fn declaration
-    if (!/fn\s+\w+/.test(code)) {
+    if (!/(?:pub\s+)?fn\s+\w+\s*\(/.test(code)) {
         return { passed: false, message: '✗ No function definitions found' };
     }
 

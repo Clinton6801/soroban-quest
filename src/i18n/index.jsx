@@ -15,6 +15,7 @@ import en from './locales/en.json';
 import es from './locales/es.json';
 import fr from './locales/fr.json';
 import { setActiveLanguage } from './languageBridge.js';
+import './i18n.css';
 
 const LOCALES = { en, es, fr };
 const SUPPORTED = ['en', 'es', 'fr'];

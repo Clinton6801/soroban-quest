@@ -5,6 +5,14 @@ const DEFAULT_SETTINGS = {
   volume: 0.5,
 };
 
+function systemPrefersReducedAudio() {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 export const SOUND_TYPES = {
   MISSION_COMPLETE: 'MISSION_COMPLETE',
   LEVEL_UP: 'LEVEL_UP',
@@ -21,7 +29,9 @@ let lastClickTime = 0;
 function loadSettings() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return { ...DEFAULT_SETTINGS };
+    if (!stored) {
+      return { ...DEFAULT_SETTINGS, muted: systemPrefersReducedAudio() };
+    }
 
     const parsed = JSON.parse(stored);
 
