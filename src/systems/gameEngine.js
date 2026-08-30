@@ -245,6 +245,55 @@ export function spendGold(state, amount) {
   };
 }
 
+/**
+ * Default Gold cost to unlock a single hint early.
+ */
+export const HINT_GOLD_COST = 25;
+
+/**
+ * Returns true if the given hint has already been unlocked with Gold for a mission.
+ * Once unlocked, revisiting the mission must not re-charge the player.
+ */
+export function isHintGoldUnlocked(state, missionId, hintIndex) {
+  const unlocked = state.goldUnlockedHints?.[missionId] || [];
+  return unlocked.includes(hintIndex);
+}
+
+/**
+ * Spend Gold to instantly unlock a hint for a mission.
+ *
+ * - If the hint was already gold-unlocked, returns the state unchanged (no re-charge)
+ *   with `hintAlreadyUnlocked: true`.
+ * - If the player cannot afford the cost, returns the state unchanged with
+ *   `insufficientGold: true`.
+ * - Otherwise deducts the cost via `spendGold` and records the unlocked hint so it
+ *   persists per mission.
+ *
+ * This is additive: the free progressive-hint tier is unaffected.
+ */
+export function spendGoldForHint(state, missionId, hintIndex, cost = HINT_GOLD_COST) {
+  if (isHintGoldUnlocked(state, missionId, hintIndex)) {
+    return { ...state, hintAlreadyUnlocked: true, insufficientGold: false };
+  }
+
+  if ((state.gold || 0) < cost) {
+    return { ...state, insufficientGold: true, hintAlreadyUnlocked: false };
+  }
+
+  const spentState = spendGold(state, cost);
+  const missionHints = spentState.goldUnlockedHints?.[missionId] || [];
+
+  return {
+    ...spentState,
+    goldUnlockedHints: {
+      ...(spentState.goldUnlockedHints || {}),
+      [missionId]: [...missionHints, hintIndex],
+    },
+    hintAlreadyUnlocked: false,
+    insufficientGold: false,
+  };
+}
+
 export function completeMission(state, missionId, xpReward) {
   if (state.completedMissions.includes(missionId)) {
     return { ...state, alreadyCompleted: true };
