@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { getMissionById, getNextMission } from "../systems/missionLoader";
 import { runTests } from "../systems/testRunner";
 import { loadProgress, saveProgress } from "../systems/storage";
-import { completeMission, recordAttempt } from "../systems/gameEngine";
+import { completeMission, recordAttempt, spendGoldForHint, isHintGoldUnlocked, HINT_GOLD_COST } from "../systems/gameEngine";
 import { logActivity, ACTIVITY_TYPES } from "../systems/activityLogger";
 import { playSound, SOUND_TYPES } from "../systems/soundManager";
 import MissionDetailSkeleton from "../components/MissionDetailSkeleton";
@@ -59,6 +59,8 @@ export default function MissionDetail() {
   const [showVictory, setShowVictory] = useState(false);
   const [victoryData, setVictoryData] = useState(null);
   const [hintIndex, setHintIndex] = useState(-1);
+  const [goldBalance, setGoldBalance] = useState(() => loadProgress().gold || 0);
+  const [goldUnlockedHints, setGoldUnlockedHints] = useState(() => loadProgress().goldUnlockedHints || {});
   const [showReplay, setShowReplay] = useState(false);
   const [replayData, setReplayData] = useState(null);
 
@@ -101,6 +103,11 @@ export default function MissionDetail() {
         setCode(mission.template || "");
         setTestResults([]);
         setHintIndex(-1);
+        {
+          const freshProgress = loadProgress();
+          setGoldBalance(freshProgress.gold || 0);
+          setGoldUnlockedHints(freshProgress.goldUnlockedHints || {});
+        }
         setShowVictory(false);
         setLivePassCount(0);
         setLiveTotalCount(0);
@@ -502,6 +509,48 @@ export default function MissionDetail() {
     }
   };
 
+  const handleGoldHint = () => {
+    if (!mission?.hints) return;
+    const nextIndex = hintIndex + 1;
+    if (nextIndex >= mission.hints.length) return;
+
+    const current = loadProgress();
+
+    // Already gold-unlocked on a previous visit — reveal for free, don't re-charge.
+    if (isHintGoldUnlocked(current, missionId, nextIndex)) {
+      setHintIndex(nextIndex);
+      return;
+    }
+
+    if ((current.gold || 0) < HINT_GOLD_COST) {
+      if (showToast) {
+        showToast(
+          t("missionDetail.toasts.hintInsufficientGold", { cost: HINT_GOLD_COST }),
+          "error",
+        );
+      }
+      return;
+    }
+
+    const updated = spendGoldForHint(current, missionId, nextIndex, HINT_GOLD_COST);
+    saveProgress(updated);
+    setGoldBalance(updated.gold || 0);
+    setGoldUnlockedHints(updated.goldUnlockedHints || {});
+    setHintIndex(nextIndex);
+
+    if (showToast) {
+      showToast(
+        t("missionDetail.toasts.hintGoldUnlocked", { index: nextIndex + 1, cost: HINT_GOLD_COST }),
+        "success",
+      );
+    }
+    logActivity(
+      ACTIVITY_TYPES.HINT_USED,
+      { missionId, hintIndex: nextIndex, title: mission.title, gold: HINT_GOLD_COST },
+      `Spent ${HINT_GOLD_COST} gold to unlock hint ${nextIndex + 1} for ${mission.title}`,
+    );
+  };
+
   const handleReset = () => {
     if (mission?.template) {
       setCode(mission.template);
@@ -722,6 +771,33 @@ export default function MissionDetail() {
               >
                 {t("missionDetail.editor.hint")}
               </button>
+              {(() => {
+                const nextHintIdx = hintIndex + 1;
+                const noMoreHints = !mission.hints || hintIndex >= mission.hints.length - 1;
+                const nextAlreadyGold = (goldUnlockedHints[missionId] || []).includes(nextHintIdx);
+                const canAfford = goldBalance >= HINT_GOLD_COST;
+                const disabled = noMoreHints || (!nextAlreadyGold && !canAfford);
+                return (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={handleGoldHint}
+                    disabled={disabled}
+                    title={
+                      nextAlreadyGold
+                        ? t("missionDetail.editor.goldHintUnlocked")
+                        : canAfford
+                          ? t("missionDetail.editor.goldHintTitle", { cost: HINT_GOLD_COST })
+                          : t("missionDetail.editor.goldHintInsufficient", { cost: HINT_GOLD_COST })
+                    }
+                    aria-label="Spend gold to instantly reveal the next hint"
+                  >
+                    {nextAlreadyGold
+                      ? t("missionDetail.editor.goldHintUnlocked")
+                      : t("missionDetail.editor.goldHint", { cost: HINT_GOLD_COST })}
+                  </button>
+                );
+              })()}
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"

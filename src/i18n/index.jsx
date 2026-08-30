@@ -14,11 +14,12 @@ import React, {
 import en from './locales/en.json';
 import es from './locales/es.json';
 import fr from './locales/fr.json';
+import zhCN from './locales/zh-CN.json';
 import { setActiveLanguage } from './languageBridge.js';
 import './i18n.css';
 
-const LOCALES = { en, es, fr };
-const SUPPORTED = ['en', 'es', 'fr'];
+const LOCALES = { en, es, fr, 'zh-CN': zhCN };
+const SUPPORTED = ['en', 'es', 'fr', 'zh-CN'];
 const STORAGE_KEY = 'soroban_quest_lang';
 const DEFAULT_LANG = 'en';
 
@@ -63,8 +64,14 @@ function detectBrowserLanguage() {
   ].filter(Boolean);
 
   for (const c of candidates) {
-    const base = String(c).toLowerCase().split('-')[0];
-    if (SUPPORTED.includes(base)) return base;
+    const code = String(c).trim();
+    if (SUPPORTED.includes(code)) return code;
+
+    const base = code.toLowerCase().split('-')[0];
+    const exactMatch = SUPPORTED.find((lang) => lang.toLowerCase() === base.toLowerCase());
+    if (exactMatch) return exactMatch;
+
+    if (code.toLowerCase().startsWith('zh')) return 'zh-CN';
   }
   return DEFAULT_LANG;
 }
