@@ -16,16 +16,16 @@ import React, {
 import en from './locales/en.json';
 import es from './locales/es.json';
 import fr from './locales/fr.json';
-import ja from './locales/ja.json';
+import zhCN from './locales/zh-CN.json';
 import { setActiveLanguage } from './languageBridge';
 
 const LOCALES: Record<string, Record<string, unknown>> = {
   en,
   es,
   fr,
-  ja,
+  'zh-CN': zhCN,
 };
-const SUPPORTED = ['en', 'es', 'fr', 'ja'] as const;
+const SUPPORTED = ['en', 'es', 'fr', 'zh-CN'] as const;
 const STORAGE_KEY = 'soroban_quest_lang';
 const DEFAULT_LANG: (typeof SUPPORTED)[number] = 'en';
 
