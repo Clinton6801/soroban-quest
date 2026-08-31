@@ -42,9 +42,6 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Build application
-        run: npm run build
-
       - name: Run functional E2E tests
         run: npm run test:e2e
 
@@ -73,9 +70,6 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-
-      - name: Build application
-        run: npm run build
 
       - name: Run visual regression tests
         run: npm run test:visual

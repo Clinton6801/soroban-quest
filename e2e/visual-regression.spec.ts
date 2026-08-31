@@ -78,17 +78,10 @@ const scenarios: Scenario[] = [
       await page.waitForTimeout(250);
     },
   },
-  {
-    name: 'mission-detail',
-    route: '/#/mission/hello-soroban',
-    fixture: 'mission-detail',
-    prepare: async (page) => {
-      await waitForMonaco(page);
-    },
-  },
+  { name: 'mission-detail', route: '/mission/hello-soroban', fixture: 'mission-detail' },
   {
     name: 'mission-detail-running',
-    route: '/#/mission/hello-soroban',
+    route: '/mission/hello-soroban',
     fixture: 'mission-detail',
     prepare: async (page) => {
       await waitForMonaco(page);
@@ -98,7 +91,7 @@ const scenarios: Scenario[] = [
   },
   {
     name: 'mission-detail-passed',
-    route: '/#/mission/hello-soroban',
+    route: '/mission/hello-soroban',
     fixture: 'mission-detail',
     prepare: async (page) => {
       await waitForMonaco(page);
@@ -146,11 +139,7 @@ async function waitForPageReady(page: import('@playwright/test').Page) {
 
 async function prepareScenarioPage(page: import('@playwright/test').Page, viewport: (typeof viewports)[number], theme: (typeof themes)[number], scenario: Scenario) {
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
-  // The mission-detail page lazy-loads its editor via timers that a frozen clock
-  // disables, leaving the page blank. Skip the clock freeze for those scenarios.
-  if (scenario.fixture !== 'mission-detail') {
-    await freezeVisualRegressionClock(page);
-  }
+  await freezeVisualRegressionClock(page);
   await clearLocalStorageBeforePageLoad(page);
   await setAppTheme(page, theme.value);
   await seedVisualRegressionState(page, scenario.fixture);
