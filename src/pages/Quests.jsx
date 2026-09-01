@@ -32,8 +32,10 @@ export default function Quests() {
     };
   };
 
+  const hasStandaloneMissions = useMemo(() => allMissions.some((m) => m.standalone), [allMissions]);
+
   const uniqueCampaigns = useMemo(() => {
-    const campaignsSet = new Set(allMissions.map((m) => m.campaign || m.chapter).filter(Boolean));
+    const campaignsSet = new Set(allMissions.filter((m) => !m.standalone).map((m) => m.campaign || m.chapter).filter(Boolean));
     return Array.from(campaignsSet);
   }, [allMissions]);
 
@@ -44,7 +46,7 @@ export default function Quests() {
         title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         description.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const campaignKey = mission.campaign || String(mission.chapter);
+      const campaignKey = mission.standalone ? 'standalone' : mission.campaign || String(mission.chapter);
       const matchesCampaign =
         selectedCampaign === 'all' || campaignKey === String(selectedCampaign);
 
@@ -103,6 +105,7 @@ export default function Quests() {
               Chapter {campaign}
             </option>
           ))}
+          {hasStandaloneMissions && <option value="standalone">{t('quests.standalone', 'Standalone')}</option>}
         </select>
 
         <select
@@ -131,12 +134,27 @@ export default function Quests() {
         {filteredMissions.map((mission) => {
           const { title } = getLocalizedMission(mission);
           const isCompleted = mission.completed || progress.completedMissions?.includes(mission.id);
-          const campaignBadgeText = mission.campaign || `Chapter ${mission.chapter || 1}`;
+          const campaignBadgeText = mission.standalone
+            ? 'Standalone'
+            : mission.campaign || `Chapter ${mission.chapter || 1}`;
 
           return (
             <Link key={mission.id} to={mission.path} className="quest-card">
               <div className="quest-card-top">
-                <span className="quest-campaign-badge">{mission.type === 'theory' ? 'Theory' : campaignBadgeText}</span>
+                <span
+                  className="quest-campaign-badge"
+                  style={
+                    mission.standalone
+                      ? {
+                          background: 'rgba(6,214,160,0.15)',
+                          border: '1px solid rgba(6,214,160,0.4)',
+                          color: 'var(--cyan)',
+                        }
+                      : undefined
+                  }
+                >
+                  {mission.type === 'theory' ? 'Theory' : campaignBadgeText}
+                </span>
                 {isCompleted && (
                   <span className="quest-completed-badge">
                     <CheckCircle size={14} /> {t('quests.done', 'Completed')}
