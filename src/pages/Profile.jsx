@@ -264,6 +264,19 @@ export default function Profile() {
     }
   };
 
+  const handleSoundMute = () => {
+    const nextMuted = !soundMuted;
+    setMuted(nextMuted);
+    setSoundMuted(nextMuted);
+    if (!nextMuted) playClick();
+  };
+
+  const handleVolumeChange = (e) => {
+    const nextVolume = Number(e.target.value);
+    setVolume(nextVolume);
+    setSoundVolume(nextVolume);
+  };
+
   const completedMissions = missions.filter((m) => state.completedMissions.includes(m.id));
 
   return (
