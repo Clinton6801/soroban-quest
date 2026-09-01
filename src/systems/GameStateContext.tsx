@@ -40,6 +40,8 @@ export interface GameStateContextValue {
   updateProfile: (newProfile: Partial<Profile>) => void;
   switchProfile: (profileId: string) => void;
   createProfile: (profileData: Partial<Profile>) => ProfileSlot | undefined;
+  equipItem: (itemId: string) => void;
+  unequipItem: (itemId: string) => void;
   resetProgress: () => Promise<boolean>;
 }
 
@@ -132,6 +134,32 @@ export const GameStateProvider: FC<{ children: ReactNode }> = ({
     [refreshActiveState],
   );
 
+  const equipItem = useCallback(
+    (itemId: string): void => {
+      const owned = progress.inventory?.owned ?? [];
+      if (!owned.includes(itemId)) return;
+
+      const equipped = progress.inventory?.equipped ?? [];
+      if (!equipped.includes(itemId)) {
+        updateProgress({
+          inventory: { owned, equipped: [...equipped, itemId] },
+        });
+      }
+    },
+    [progress, updateProgress],
+  );
+
+  const unequipItem = useCallback(
+    (itemId: string): void => {
+      const owned = progress.inventory?.owned ?? [];
+      const equipped = progress.inventory?.equipped ?? [];
+      updateProgress({
+        inventory: { owned, equipped: equipped.filter((id) => id !== itemId) },
+      });
+    },
+    [progress, updateProgress],
+  );
+
   const resetProgress = useCallback((): Promise<boolean> => {
     setIsResetConfirmOpen(true);
     return new Promise((resolve) => {
@@ -173,6 +201,8 @@ export const GameStateProvider: FC<{ children: ReactNode }> = ({
         updateProfile,
         switchProfile,
         createProfile,
+        equipItem,
+        unequipItem,
         resetProgress,
       }}
     >

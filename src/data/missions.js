@@ -3728,6 +3728,48 @@ pub fn update_price(env: Env, asset: Symbol, price: i128) {
                     'Dans get_all_assets : utilise un traqueur Vec<Symbol> similaire à event-emitter',
                 ],
             },
+            ja: {
+                title: 'オラクルフィード',
+                story: `# 📊 オラクルの塔
+
+本番システムの集落の頂上に立つ**オラクルの塔**は、オフチェーンデータがブロックチェーンに入る場所です。
+
+*「スマートコントラクトはデータなしでは盲目です」* と、オラクルの賢者は言います。*「オンチェーンとオフチェーンの世界の間に橋を架けてください。」*
+
+## あなたのミッション
+
+価格オラクルコントラクトを作成してください：
+- \`update_price\` — 管理者がアセットペアの価格を更新します
+- \`get_price\` — アセットペアの現在の価格を返します
+- \`get_last_updated\` — 価格が最後に更新された時刻を返します
+- \`get_all_assets\` — 追跡されているすべてのアセットペアを返します
+
+## 学ぶこと
+
+- オラクルデータフィードパターン
+- 管理者専用の更新関数
+- タイムスタンプ/シーケンス追跡
+- Vec<Symbol>を使用したアセットペア管理
+
+## 重要な概念
+
+\`\`\`rust
+// メタデータ付きの価格を保存
+pub fn update_price(env: Env, asset: Symbol, price: i128) {
+    admin.require_auth();
+    env.storage().instance().set(&asset, &price);
+    env.storage().instance()
+        .set(&(asset.clone(), TIMESTAMP), &env.ledger().sequence());
+}
+\`\`\``,
+                learningGoal: '管理者アップデートを使用したオンチェーン価格オラクルを構築してください',
+                hints: [
+                    'update_priceで：管理者からrequire_auth、価格とシーケンスを保存',
+                    'get_priceで：資産の価格をルックアップして返す',
+                    'get_last_updatedで：資産用に保存されたシーケンスを返す',
+                    'get_all_assetsで：event-emitterと同様のVec<Symbol>トラッカーを使用',
+                ],
+            },
         },
         template: `#![no_std]
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol, Vec};
@@ -3959,6 +4001,49 @@ let no_votes: u32 = /* count votes where value is false */
                     'Dans create_proposal : stocke la description, la date limite, les décomptes oui/non',
                     'Dans vote : vérifie que la proposition est active, enregistre le choix du votant, mets à jour les totaux',
                     'Dans execute : vérifie que la proposition est adoptée (oui > non), marque-la comme exécutée',
+                ],
+            },
+            ja: {
+                title: 'シンプルガバナー',
+                story: `# 🏛️ 統治の殿堂
+
+最後の部屋が待っています — **統治の殿堂**は、全王国の運命が集団の意志によって決定される場所です。
+
+*「最高のスマートコントラクトはコミュニティに自分たちを統治する権限を与えます」* と、大長老は宣言します。*「提案が投票を通じて法律になるシステムを構築してください。」*
+
+## あなたのミッション
+
+提案と投票を備えたガバナンスコントラクトを作成してください：
+- \`create_proposal\` — 説明と投票期間を含む提案を作成します
+- \`vote\` — アクティブな提案に投票（はい/いいえ）を投じます
+- \`execute\` — 提案が可決された場合、その提案を実行します
+- \`get_proposal\` — 提案の詳細を返します
+
+## 学ぶこと
+
+- オンチェーン統治メカニズム
+- 提案ライフサイクル（作成→投票→実行）
+- Map<Address, bool>での投票集計
+- 定足数と承認閾値ロジック
+
+## 重要な概念
+
+\`\`\`rust
+// 提案ごとの投票を追跡
+let mut votes: Map<Address, bool> = env.storage().instance()
+    .get(&VOTES)
+    .unwrap_or(Map::new(&env));
+votes.set(&voter, &support);
+
+// 承認を数える
+let yes_votes: u32 = /* valueがtrueの投票を数える */
+let no_votes: u32 = /* valueがfalseの投票を数える */
+\`\`\``,
+                learningGoal: '提案と投票を備えた完全なオンチェーン統治システムを構築してください',
+                hints: [
+                    'create_proposalで：説明、期限、はい/いいえのカウントを保存',
+                    'voteで：提案がアクティブかどうかを確認し、投票者の選択を記録し、合計を更新',
+                    'executeで：提案が可決されたことを確認し（はい>いいえ）、実行済みとしてマーク',
                 ],
             },
         },
@@ -4225,6 +4310,53 @@ env.storage().instance().set(&MUTEX, &false);
                     'Mets mutex à true avant la mise à jour du solde, à false après',
                 ],
             },
+            ja: {
+                title: 'リエントランシーガード',
+                story: `# 🛡️ 脆弱性の鍛冶場
+
+シタデルの奥深くに**脆弱性の鍛冶場**があります。ここは壊れたコントラクトが修復される場所です。
+
+*「スマートコントラクトで最も危険な脆弱性は」* と、セキュリティの賢者は警告します、*「リエントランシーです。状態を保持しながら外部コードを呼び出すコントラクトは悪用される可能性があります。」*
+
+## あなたのミッション
+
+以下のvaultコントラクトはリエントランシーに対して脆弱です — 資金を送信した後に残高を更新します。**ミューテックスガード**パターンを使用してそれを修正してください：リエントランシーを防止するブール値フラグです。
+
+脆弱なコードは以下のものです：
+- \`withdraw\`は状態を更新する前に資金を送信します（バグ）
+- リエントランシー保護がない
+
+以下のように修正してください：
+1. \`false\`に初期化されたミューテックスブール値ストレージキーを追加
+2. \`withdraw\`の開始時に\`true\`に設定
+3. \`withdraw\`の終了時に\`false\`に設定
+4. エントリでミューテックスをチェックし、ロック済みの場合はpanicをトリガー
+
+## 学ぶこと
+
+- リエントランシー脆弱性の特定
+- 予防のためのミューテックス/ガードパターン
+- チェック・エフェクト・インタラクションパターン
+- セキュリティファースト開発の考え方
+
+## 重要な概念
+
+\`\`\`rust
+// ミューテックスガードパターン
+if env.storage().instance().get(&MUTEX).unwrap_or(false) {
+    panic!("Reentrancy detected");
+}
+env.storage().instance().set(&MUTEX, &true);
+// ... 脆弱な操作 ...
+env.storage().instance().set(&MUTEX, &false);
+\`\`\``,
+                learningGoal: 'ミューテックスガードパターンを使用してリエントランシー脆弱性を修正',
+                hints: [
+                    'ミューテックス定数を追加：`const MUTEX: Symbol = symbol_short!("MUTEX");`',
+                    'withdrawの開始時、ミューテックスがtrueか確認し、その場合panicをトリガー',
+                    'ミューテックスを残高更新前にtrueに、その後falseに設定',
+                ],
+            },
         },
         template: `#![no_std]
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
@@ -4446,6 +4578,51 @@ env.storage().instance().set(&FEE, &new_fee);
                     'Dans set_fee : lis ADMIN depuis le stockage, appelle admin.require_auth()',
                     'Dans pause : lis ADMIN depuis le stockage, appelle admin.require_auth()',
                     'La fonction init est correcte — elle stocke déjà l\'admin correctement',
+                ],
+            },
+            ja: {
+                title: 'アクセス制御の修正',
+                story: `# 🔓 パーミッション侵害
+
+**パーミッション侵害**は、故障した認可ロジックが修復される訓練場です。
+
+*「最も一般的な2番目の脆弱性は」* と、セキュリティの賢者は説明します、*「アクセス制御の欠落です。管理者に限定されるべき関数は誰でも呼び出すことができます。」*
+
+## あなたのミッション
+
+以下のコントラクトは\`admin\`アドレスを保存していますが、特権関数で\`require_auth()\`を使用することはありません。適切なアクセス制御を追加してください。
+
+脆弱なコードは以下のものです：
+- 定義されているが検証されない\`ADMIN\`定数
+- 誰でも呼び出せる\`set_fee\`および\`pause\`関数
+- どこにも\`require_auth()\`呼び出しがない
+
+以下のように修正してください：
+1. \`set_fee\`と\`pause\`に\`require_auth()\`チェックを追加
+2. 認証をチェックする前にストレージから管理者アドレスを読み込む
+
+## 学ぶこと
+
+- アクセス制御脆弱性の特定
+- 適切な\`require_auth()\`配置
+- 管理者専用関数パターン
+- 多層防御の原則
+
+## 重要な概念
+
+\`\`\`rust
+// 正しいアクセス制御
+let admin: Address = env.storage().instance().get(&ADMIN).unwrap();
+admin.require_auth();
+
+// 現在、特権操作を実行
+env.storage().instance().set(&FEE, &new_fee);
+\`\`\``,
+                learningGoal: 'require_auth()チェックを追加してアクセス制御の欠落を修正',
+                hints: [
+                    'set_feeで：ストレージからADMINを読み込み、admin.require_auth()を呼び出す',
+                    'pauseで：ストレージからADMINを読み込み、admin.require_auth()を呼び出す',
+                    'init関数は大丈夫です — 既に管理者を正しく保存しています',
                 ],
             },
         },

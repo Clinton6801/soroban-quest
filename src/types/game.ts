@@ -139,6 +139,11 @@ export interface GameState {
   xpBoostActive: boolean;
   streakFreezeUsed: boolean;
   skillPoints?: number[];
+  inventory?: {
+    owned: string[];
+    equipped: string[];
+  };
+  goldUnlockedHints?: Record<string, number[]>;
 }
 
 /**

@@ -98,5 +98,12 @@ export default [
       },
     },
   },
+  {
+    // Disable no-useless-escape for data files with i18n content (backticks in template strings)
+    files: ['src/data/missions.js', 'src/data/campaigns.js'],
+    rules: {
+      'no-useless-escape': 'off',
+    },
+  },
 ];
 
