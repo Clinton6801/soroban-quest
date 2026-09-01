@@ -26,6 +26,9 @@ import {
   updateStreak,
   getDefaultState,
   BADGES,
+  HINT_GOLD_COST,
+  isHintGoldUnlocked,
+  spendGoldForHint,
 } from "../gameEngine";
 
 describe("gameEngine core logic", () => {

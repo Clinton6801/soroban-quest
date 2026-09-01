@@ -161,6 +161,9 @@ function getDefaultState() {
       equipped: [],
     },
     purchasedItems: [],
+    xpBoostActive: false,
+    streakFreezeUsed: false,
+    goldUnlockedHints: {},
   };
 }
 
