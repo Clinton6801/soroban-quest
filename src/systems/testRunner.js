@@ -104,8 +104,11 @@ function checkSyntaxBasics(code) {
 }
 
 function checkStructure(code, _mission) {
+    // Strip comments before checking structure
+    const codeNoComments = code.replace(/\/\/.*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
     // Must have at least one fn declaration
-    if (!/(?:pub\s+)?fn\s+\w+\s*\(/.test(code)) {
+    if (!/\bfn[ \t]+[a-zA-Z_]\w*/.test(codeNoComments)) {
         return { passed: false, message: '✗ No function definitions found' };
     }
 
