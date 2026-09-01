@@ -36,8 +36,12 @@ export default function LazyMonacoEditor(props: LazyMonacoEditorProps): ReactEle
     stopEditorLoad.current?.();
     stopEditorLoad.current = null;
     if (typeof window !== 'undefined') {
-      (window as any).__MONACO_EDITOR__ = editor;
-      (window as any).monaco = monaco;
+      const globalWindow = window as Window & {
+        __MONACO_EDITOR__?: IStandaloneCodeEditor;
+        monaco?: Monaco;
+      };
+      globalWindow.__MONACO_EDITOR__ = editor;
+      globalWindow.monaco = monaco;
     }
     props.onMount?.(editor, monaco);
   };
