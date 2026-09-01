@@ -4,7 +4,6 @@ import { render, screen } from "@testing-library/react";
 import { ErrorBoundary, EditorErrorBoundary, MissionErrorBoundary } from "../../components/ErrorBoundary";
 
 // Mock translation hook since ErrorBoundary uses useTranslation
-vi.impersonatingModule?.();
 vi.mock("../../i18n/useTranslation", () => ({
   useTranslation: () => ({
     t: (key) => {
