@@ -4716,6 +4716,515 @@ impl ConfigContract {
         ],
         conceptsIntroduced: ['access control', 'authorization fix', 'admin guard', 'security audit'],
     },
+
+    /* ==========================================
+       Standalone Missions — outside campaign structure
+       Self-contained drills, no level gating. Filtered out of
+       campaign progression but still count toward XP/gold.
+       ========================================== */
+
+    {
+        id: 'standalone-storage-dojo',
+        standalone: true,
+        order: 20,
+        difficulty: 'beginner',
+        xpReward: 120,
+        i18n: {
+            en: {
+                title: 'Storage Dojo',
+                story: `# 🥋 Storage Dojo
+
+Welcome to the **Storage Dojo** — a quiet training hall outside the campaign path.
+
+*"Before mastering complex protocols, drill the basics until they are reflex,"* says the Dojo Master.
+
+## Your Mission
+
+Build a minimal storage contract that can save and retrieve a single value:
+
+- \`set_value\` — stores a \`u32\` under a fixed key
+- \`get_value\` — retrieves the stored value (defaults to \`0\` if empty)
+
+## What You'll Learn
+
+- \`env.storage().instance().set(&key, &value)\` — write
+- \`env.storage().instance().get(&key).unwrap_or(0)\` — read with default
+- The \`symbol_short!\` macro for storage keys
+
+## Key Concepts
+
+\`\`\`rust
+const VALUE: Symbol = symbol_short!("VALUE");
+env.storage().instance().set(&VALUE, &value);
+env.storage().instance().get(&VALUE).unwrap_or(0)
+\`\`\``,
+                learningGoal: 'Practice basic instance storage: set and get a u32 value',
+                hints: [
+                    'Define `const VALUE: Symbol = symbol_short!("VALUE");` at the top',
+                    'In set_value: `env.storage().instance().set(&VALUE, &value)`',
+                    'In get_value: `env.storage().instance().get(&VALUE).unwrap_or(0)`',
+                ],
+            },
+            es: {
+                title: 'Dojo de Almacenamiento',
+                story: `# 🥋 Dojo de Almacenamiento
+
+Bienvenido al **Dojo de Almacenamiento** — una sala de entrenamiento tranquila fuera del camino de campaña.
+
+*"Antes de dominar protocolos complejos, practica lo básico hasta que sea un reflejo,"* dice el Maestro del Dojo.
+
+## Tu Misión
+
+Construye un contrato mínimo que pueda guardar y recuperar un solo valor:
+
+- \`set_value\` — almacena un \`u32\` bajo una clave fija
+- \`get_value\` — recupera el valor almacenado (por defecto \`0\` si está vacío)
+
+## Lo Que Aprenderás
+
+- \`env.storage().instance().set(&key, &value)\` — escribir
+- \`env.storage().instance().get(&key).unwrap_or(0)\` — leer con valor por defecto
+- La macro \`symbol_short!\` para claves de almacenamiento
+
+## Conceptos Clave
+
+\`\`\`rust
+const VALUE: Symbol = symbol_short!("VALUE");
+env.storage().instance().set(&VALUE, &value);
+env.storage().instance().get(&VALUE).unwrap_or(0)
+\`\`\``,
+                learningGoal: 'Practica el almacenamiento básico instance: guardar y obtener un valor u32',
+                hints: [
+                    'Define `const VALUE: Symbol = symbol_short!("VALUE");` al inicio',
+                    'En set_value: `env.storage().instance().set(&VALUE, &value)`',
+                    'En get_value: `env.storage().instance().get(&VALUE).unwrap_or(0)`',
+                ],
+            },
+            fr: {
+                title: 'Dojo de Stockage',
+                story: `# 🥋 Dojo de Stockage
+
+Bienvenue au **Dojo de Stockage** — une salle d'entraînement paisible en dehors du chemin de campagne.
+
+*"Avant de maîtriser les protocoles complexes, répète les bases jusqu'au réflexe,"* dit le Maître du Dojo.
+
+## Ta Mission
+
+Construis un contrat minimal capable de sauvegarder et récupérer une seule valeur :
+
+- \`set_value\` — stocke un \`u32\` sous une clé fixe
+- \`get_value\` — récupère la valeur stockée (par défaut \`0\` si vide)
+
+## Ce Que Tu Apprendras
+
+- \`env.storage().instance().set(&key, &value)\` — écrire
+- \`env.storage().instance().get(&key).unwrap_or(0)\` — lire avec défaut
+- La macro \`symbol_short!\` pour les clés de stockage
+
+## Concepts Clés
+
+\`\`\`rust
+const VALUE: Symbol = symbol_short!("VALUE");
+env.storage().instance().set(&VALUE, &value);
+env.storage().instance().get(&VALUE).unwrap_or(0)
+\`\`\``,
+                learningGoal: 'Pratique le stockage instance de base : enregistrer et récupérer une valeur u32',
+                hints: [
+                    'Définis `const VALUE: Symbol = symbol_short!("VALUE");` en haut',
+                    'Dans set_value : `env.storage().instance().set(&VALUE, &value)`',
+                    'Dans get_value : `env.storage().instance().get(&VALUE).unwrap_or(0)`',
+                ],
+            },
+        },
+        template: `#![no_std]
+use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
+
+const VALUE: Symbol = symbol_short!("VALUE");
+
+#[contract]
+pub struct StorageDojo;
+
+#[contractimpl]
+impl StorageDojo {
+    // TODO: Create 'set_value' function
+    // Parameters: env: Env, value: u32
+    // Should store the value under VALUE key
+
+    // TODO: Create 'get_value' function
+    // Parameters: env: Env
+    // Returns: u32
+    // Should return the stored value or 0 if not set
+    
+}`,
+        solution: `#![no_std]
+use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
+
+const VALUE: Symbol = symbol_short!("VALUE");
+
+#[contract]
+pub struct StorageDojo;
+
+#[contractimpl]
+impl StorageDojo {
+    pub fn set_value(env: Env, value: u32) {
+        env.storage().instance().set(&VALUE, &value);
+    }
+
+    pub fn get_value(env: Env) -> u32 {
+        env.storage().instance().get(&VALUE).unwrap_or(0)
+    }
+}`,
+        checks: [
+            { type: 'has_attribute', attribute: 'contractimpl', message: 'Missing #[contractimpl]', description: '#[contractimpl]' },
+            { type: 'has_function', name: 'set_value', params: ['env', 'value'], message: "Missing 'set_value' function" },
+            { type: 'has_function', name: 'get_value', params: ['env'], message: "Missing 'get_value' function" },
+            { type: 'returns_type', function: 'get_value', returnType: 'u32', message: "'get_value' should return u32" },
+            { type: 'storage_operation', operation: 'set', message: 'Must use storage set to store the value' },
+            { type: 'storage_operation', operation: 'get', message: 'Must use storage get to read the value' },
+            { type: 'uses_type', typeName: 'Symbol', message: 'Must use Symbol for the storage key' },
+        ],
+        conceptsIntroduced: ['storage', 'instance', 'set', 'get', 'unwrap_or'],
+    },
+
+    {
+        id: 'standalone-auth-guard',
+        standalone: true,
+        order: 21,
+        difficulty: 'beginner',
+        xpReward: 150,
+        i18n: {
+            en: {
+                title: 'Auth Guard Drill',
+                story: `# 🛡️ Auth Guard Drill
+
+Step into the **Guard Post** — a standalone drill for authorization.
+
+*"Every state change must prove who asked for it,"* warns the Guard Captain.
+
+## Your Mission
+
+Build a contract that gates a privileged action behind \`require_auth\`:
+
+- \`init\` — stores an admin address
+- \`protected_action\` — requires auth from the caller, flips a \`DONE\` flag to \`true\`
+- \`is_done\` — returns whether the flag is set
+
+## What You'll Learn
+
+- \`Address\` type for identities
+- \`address.require_auth()\` guard
+- Storing and checking a boolean flag
+
+## Key Concepts
+
+\`\`\`rust
+let admin: Address = env.storage().instance().get(&ADMIN).unwrap();
+admin.require_auth();
+env.storage().instance().set(&DONE, &true);
+\`\`\``,
+                learningGoal: 'Practice require_auth gating for a protected state change',
+                hints: [
+                    'Store admin in init: `env.storage().instance().set(&ADMIN, &admin)`',
+                    'In protected_action: read caller auth with `user.require_auth()`',
+                    'Set flag: `env.storage().instance().set(&DONE, &true)`',
+                ],
+            },
+            es: {
+                title: 'Ejercicio de Guardia de Autorización',
+                story: `# 🛡️ Ejercicio de Guardia de Autorización
+
+Entra al **Puesto de Guardia** — un ejercicio aislado de autorización.
+
+*"Cada cambio de estado debe probar quién lo solicitó,"* advierte el Capitán de la Guardia.
+
+## Tu Misión
+
+Construye un contrato que proteja una acción privilegiada con \`require_auth\`:
+
+- \`init\` — guarda una dirección admin
+- \`protected_action\` — requiere auth del llamante, cambia la bandera \`DONE\` a \`true\`
+- \`is_done\` — devuelve si la bandera está activa
+
+## Lo Que Aprenderás
+
+- El tipo \`Address\` para identidades
+- Guardia \`address.require_auth()\`
+- Almacenar y verificar una bandera booleana
+
+## Conceptos Clave
+
+\`\`\`rust
+let admin: Address = env.storage().instance().get(&ADMIN).unwrap();
+admin.require_auth();
+env.storage().instance().set(&DONE, &true);
+\`\`\``,
+                learningGoal: 'Practica el control require_auth para un cambio de estado protegido',
+                hints: [
+                    'Guarda admin en init: `env.storage().instance().set(&ADMIN, &admin)`',
+                    'En protected_action: verifica con `user.require_auth()`',
+                    'Activa la bandera: `env.storage().instance().set(&DONE, &true)`',
+                ],
+            },
+            fr: {
+                title: "Exercice du Garde d'Autorisation",
+                story: `# 🛡️ Exercice du Garde d'Autorisation
+
+Entre dans le **Poste de Garde** — un exercice isolé pour l'autorisation.
+
+*"Chaque changement d'état doit prouver qui l'a demandé,"* avertit le Capitaine de la Garde.
+
+## Ta Mission
+
+Construis un contrat qui protège une action privilégiée avec \`require_auth\` :
+
+- \`init\` — enregistre une adresse admin
+- \`protected_action\` — exige l'auth de l'appelant, met le drapeau \`DONE\` à \`true\`
+- \`is_done\` — renvoie si le drapeau est activé
+
+## Ce Que Tu Apprendras
+
+- Le type \`Address\` pour les identités
+- Le garde \`address.require_auth()\`
+- Stocker et vérifier un drapeau booléen
+
+## Concepts Clés
+
+\`\`\`rust
+let admin: Address = env.storage().instance().get(&ADMIN).unwrap();
+admin.require_auth();
+env.storage().instance().set(&DONE, &true);
+\`\`\``,
+                learningGoal: "Pratique le contrôle require_auth pour un changement d'état protégé",
+                hints: [
+                    "Stocke admin dans init : `env.storage().instance().set(&ADMIN, &admin)`",
+                    "Dans protected_action : vérifie avec `user.require_auth()`",
+                    "Active le drapeau : `env.storage().instance().set(&DONE, &true)`",
+                ],
+            },
+        },
+        template: `#![no_std]
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
+
+const ADMIN: Symbol = symbol_short!("ADMIN");
+const DONE: Symbol = symbol_short!("DONE");
+
+#[contract]
+pub struct AuthGuard;
+
+#[contractimpl]
+impl AuthGuard {
+    // TODO: Create 'init' function
+    // Parameters: env: Env, admin: Address
+    // Should store admin
+
+    // TODO: Create 'protected_action' function
+    // Parameters: env: Env, user: Address
+    // Should call user.require_auth() and set DONE to true
+
+    // TODO: Create 'is_done' function
+    // Parameters: env: Env
+    // Returns: bool
+    // Should return the DONE flag or false
+    
+}`,
+        solution: `#![no_std]
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
+
+const ADMIN: Symbol = symbol_short!("ADMIN");
+const DONE: Symbol = symbol_short!("DONE");
+
+#[contract]
+pub struct AuthGuard;
+
+#[contractimpl]
+impl AuthGuard {
+    pub fn init(env: Env, admin: Address) {
+        env.storage().instance().set(&ADMIN, &admin);
+        env.storage().instance().set(&DONE, &false);
+    }
+
+    pub fn protected_action(env: Env, user: Address) {
+        user.require_auth();
+        env.storage().instance().set(&DONE, &true);
+    }
+
+    pub fn is_done(env: Env) -> bool {
+        env.storage().instance().get(&DONE).unwrap_or(false)
+    }
+}`,
+        checks: [
+            { type: 'has_attribute', attribute: 'contractimpl', message: 'Missing #[contractimpl]', description: '#[contractimpl]' },
+            { type: 'has_function', name: 'init', params: ['env', 'admin'], message: "Missing 'init' function" },
+            { type: 'has_function', name: 'protected_action', params: ['env', 'user'], message: "Missing 'protected_action' function" },
+            { type: 'has_function', name: 'is_done', params: ['env'], message: "Missing 'is_done' function" },
+            { type: 'returns_type', function: 'is_done', returnType: 'bool', message: "'is_done' should return bool" },
+            { type: 'contains_pattern', pattern: 'require_auth()', message: 'Must use require_auth() for access control', description: 'require_auth()' },
+            { type: 'storage_operation', operation: 'set', message: 'Must use storage set' },
+            { type: 'storage_operation', operation: 'get', message: 'Must use storage get' },
+            { type: 'uses_type', typeName: 'Address', message: 'Must use Address type' },
+        ],
+        conceptsIntroduced: ['Address', 'require_auth', 'access control', 'bool storage'],
+    },
+
+    {
+        id: 'standalone-vector-lab',
+        standalone: true,
+        order: 22,
+        difficulty: 'beginner',
+        xpReward: 130,
+        i18n: {
+            en: {
+                title: 'Vector Lab',
+                story: `# 🧪 Vector Lab
+
+Enter the **Vector Lab** — a hands-on workshop for Soroban's most flexible collection.
+
+*"Vectors hold the many, order the many, return the many,"* says the Lab Technician.
+
+## Your Mission
+
+Create a contract that builds and inspects Vectors:
+
+- \`make_sequence\` — returns a \`Vec<u32>\` containing \`[1, 2, 3]\`
+- \`get_length\` — takes a \`Vec<u32>\` and returns its length as \`u32\`
+
+## What You'll Learn
+
+- \`Vec\` type and the \`vec![&env, ...]\` macro
+- \`Vec::len()\` for length
+- Passing Vectors between functions
+
+## Key Concepts
+
+\`\`\`rust
+use soroban_sdk::{vec, Vec};
+vec![&env, 1u32, 2u32, 3u32]
+vals.len()
+\`\`\``,
+                learningGoal: 'Practice creating and inspecting Vec<u32> collections',
+                hints: [
+                    'Use `vec![&env, 1u32, 2u32, 3u32]` to build the sequence',
+                    'Signature for get_length: `pub fn get_length(env: Env, vals: Vec<u32>) -> u32`',
+                    'Return length with `vals.len()`',
+                ],
+            },
+            es: {
+                title: 'Laboratorio de Vectores',
+                story: `# 🧪 Laboratorio de Vectores
+
+Entra al **Laboratorio de Vectores** — un taller práctico para la colección más flexible de Soroban.
+
+*"Los vectores contienen a los muchos, ordenan a los muchos, devuelven a los muchos,"* dice el Técnico de Laboratorio.
+
+## Tu Misión
+
+Crea un contrato que construya e inspeccione Vectores:
+
+- \`make_sequence\` — devuelve un \`Vec<u32>\` que contiene \`[1, 2, 3]\`
+- \`get_length\` — recibe un \`Vec<u32>\` y devuelve su longitud como \`u32\`
+
+## Lo Que Aprenderás
+
+- El tipo \`Vec\` y la macro \`vec![&env, ...]\`
+- \`Vec::len()\` para la longitud
+- Pasar Vectores entre funciones
+
+## Conceptos Clave
+
+\`\`\`rust
+use soroban_sdk::{vec, Vec};
+vec![&env, 1u32, 2u32, 3u32]
+vals.len()
+\`\`\``,
+                learningGoal: 'Practica crear e inspeccionar colecciones Vec<u32>',
+                hints: [
+                    'Usa `vec![&env, 1u32, 2u32, 3u32]` para construir la secuencia',
+                    'Firma para get_length: `pub fn get_length(env: Env, vals: Vec<u32>) -> u32`',
+                    'Devuelve la longitud con `vals.len()`',
+                ],
+            },
+            fr: {
+                title: 'Laboratoire de Vecteurs',
+                story: `# 🧪 Laboratoire de Vecteurs
+
+Entre dans le **Laboratoire de Vecteurs** — un atelier pratique pour la collection la plus flexible de Soroban.
+
+*"Les vecteurs contiennent le multiple, ordonnent le multiple, renvoient le multiple,"* dit le Technicien de Laboratoire.
+
+## Ta Mission
+
+Crée un contrat qui construit et inspecte des Vecteurs :
+
+- \`make_sequence\` — renvoie un \`Vec<u32>\` contenant \`[1, 2, 3]\`
+- \`get_length\` — reçoit un \`Vec<u32>\` et renvoie sa longueur en \`u32\`
+
+## Ce Que Tu Apprendras
+
+- Le type \`Vec\` et la macro \`vec![&env, ...]\`
+- \`Vec::len()\` pour la longueur
+- Passer des Vecteurs entre les fonctions
+
+## Concepts Clés
+
+\`\`\`rust
+use soroban_sdk::{vec, Vec};
+vec![&env, 1u32, 2u32, 3u32]
+vals.len()
+\`\`\``,
+                learningGoal: 'Pratique la création et l\'inspection de collections Vec<u32>',
+                hints: [
+                    'Utilise `vec![&env, 1u32, 2u32, 3u32]` pour construire la séquence',
+                    'Signature pour get_length : `pub fn get_length(env: Env, vals: Vec<u32>) -> u32`',
+                    'Renvoie la longueur avec `vals.len()`',
+                ],
+            },
+        },
+        template: `#![no_std]
+use soroban_sdk::{contract, contractimpl, vec, Env, Vec};
+
+#[contract]
+pub struct VectorLab;
+
+#[contractimpl]
+impl VectorLab {
+    // TODO: Create 'make_sequence' function
+    // Parameters: env: Env
+    // Returns: Vec<u32>
+    // Should return vec![&env, 1u32, 2u32, 3u32]
+
+    // TODO: Create 'get_length' function
+    // Parameters: env: Env, vals: Vec<u32>
+    // Returns: u32
+    // Should return vals.len()
+    
+}`,
+        solution: `#![no_std]
+use soroban_sdk::{contract, contractimpl, vec, Env, Vec};
+
+#[contract]
+pub struct VectorLab;
+
+#[contractimpl]
+impl VectorLab {
+    pub fn make_sequence(env: Env) -> Vec<u32> {
+        vec![&env, 1u32, 2u32, 3u32]
+    }
+
+    pub fn get_length(env: Env, vals: Vec<u32>) -> u32 {
+        vals.len()
+    }
+}`,
+        checks: [
+            { type: 'has_attribute', attribute: 'contractimpl', message: 'Missing #[contractimpl]', description: '#[contractimpl]' },
+            { type: 'has_function', name: 'make_sequence', params: ['env'], message: "Missing 'make_sequence' function" },
+            { type: 'returns_type', function: 'make_sequence', returnType: 'Vec<u32>', message: "'make_sequence' should return Vec<u32>" },
+            { type: 'has_function', name: 'get_length', params: ['env', 'vals'], message: "Missing 'get_length' function" },
+            { type: 'returns_type', function: 'get_length', returnType: 'u32', message: "'get_length' should return u32" },
+            { type: 'contains_pattern', pattern: 'vec![', message: 'Must use vec! macro', description: 'vec! macro' },
+            { type: 'uses_type', typeName: 'Vec', message: 'Must use Vec type' },
+        ],
+        conceptsIntroduced: ['Vec', 'vec! macro', 'len', 'collections'],
+    },
     ...authoredMissions,
 ];
 

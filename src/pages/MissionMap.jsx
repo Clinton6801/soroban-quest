@@ -43,8 +43,10 @@ export default function MissionMap() {
   const [selectedChapter, setSelectedChapter] = useState('all');
 
   const chapters = useMemo(() => {
-    return [...new Set(missions.map((m) => m.chapter))].sort((a, b) => a - b);
+    return [...new Set(missions.map((m) => m.chapter).filter(Boolean))].sort((a, b) => a - b);
   }, [missions]);
+
+  const hasStandalone = useMemo(() => missions.some((m) => m.standalone), [missions]);
 
   const missionStates = useMemo(() => {
     return missions.map((m) => ({
@@ -62,7 +64,10 @@ export default function MissionMap() {
         mission.learningGoal.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesDifficulty =
         selectedDifficulty === 'all' || mission.difficulty === selectedDifficulty;
-      const matchesChapter = selectedChapter === 'all' || mission.chapter === selectedChapter;
+      const isStandalone = !!mission.standalone;
+      const matchesChapter =
+        selectedChapter === 'all' ||
+        (selectedChapter === 'standalone' ? isStandalone : mission.chapter === selectedChapter);
       return matchesSearch && matchesDifficulty && matchesChapter;
     });
   }, [missionStates, searchTerm, selectedDifficulty, selectedChapter]);
@@ -448,8 +453,15 @@ export default function MissionMap() {
             </span>
             <span className="timeline-body">
               <span className="timeline-meta">
-                {t('missionMap.card.chapterMission', { chapter: m.chapter, mission: m.order })}
+                {m.standalone
+                  ? t('missionMap.card.standaloneMission', 'Standalone • Mission {{mission}}', { mission: m.order })
+                  : t('missionMap.card.chapterMission', { chapter: m.chapter, mission: m.order })}
               </span>
+              {m.standalone && (
+                <span className="standalone-badge" style={{ fontSize: '0.6rem', color: 'var(--cyan)', fontWeight: 700, letterSpacing: '0.04em' }}>
+                  STANDALONE
+                </span>
+              )}
               <span className="timeline-title">{m.title}</span>
               <span className="timeline-foot">
                 <span className="timeline-xp">{t('missionMap.card.xp', { xp: m.xpReward })}</span>
@@ -530,6 +542,15 @@ export default function MissionMap() {
                 {t('missionMap.chapters.n', { number: n })}
               </button>
             ))}
+            {hasStandalone && (
+              <button
+                className={`filter-chip ${selectedChapter === 'standalone' ? 'active' : ''}`}
+                onClick={() => setSelectedChapter('standalone')}
+                aria-pressed={selectedChapter === 'standalone'}
+              >
+                {t('missionMap.chapters.standalone', 'Standalone')}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -554,14 +575,35 @@ export default function MissionMap() {
               }}
               role="button"
               tabIndex={m.unlocked ? 0 : -1}
-              aria-label={`Mission card ${m.order}: ${m.title}. Chapter ${m.chapter}. Reward: ${m.xpReward} XP. Difficulty: ${m.difficulty}.${m.completed ? ' Status: Completed.' : !m.unlocked ? ' Status: Locked.' : ' Status: Available.'}`}
+              aria-label={`Mission card ${m.order}: ${m.title}. ${m.standalone ? 'Standalone' : `Chapter ${m.chapter}`}. Reward: ${m.xpReward} XP. Difficulty: ${m.difficulty}.${m.completed ? ' Status: Completed.' : !m.unlocked ? ' Status: Locked.' : ' Status: Available.'}`}
             >
               <div className="mission-card-header">
                 <span className="mission-card-chapter">
-                  {t('missionMap.card.chapterMission', { chapter: m.chapter, mission: m.order })}
+                  {m.standalone
+                    ? t('missionMap.card.standaloneMission', 'Standalone • Mission {{mission}}', { mission: m.order })
+                    : t('missionMap.card.chapterMission', { chapter: m.chapter, mission: m.order })}
                 </span>
-                <span className="mission-card-xp">
-                  {t('missionMap.card.xp', { xp: m.xpReward })}
+                <span style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {m.standalone && (
+                    <span
+                      className="standalone-badge"
+                      style={{
+                        background: 'rgba(6,214,160,0.15)',
+                        border: '1px solid rgba(6,214,160,0.4)',
+                        color: 'var(--cyan)',
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        padding: '2px 6px',
+                        borderRadius: '9999px',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      STANDALONE
+                    </span>
+                  )}
+                  <span className="mission-card-xp">
+                    {t('missionMap.card.xp', { xp: m.xpReward })}
+                  </span>
                 </span>
               </div>
               <h3 className="mission-card-title">{m.title}</h3>
