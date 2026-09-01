@@ -474,6 +474,27 @@ export default function Profile() {
         })}
       </div>
 
+      {/* INVENTORY */}
+      <h2 className="profile-section-title">Inventory</h2>
+      <div className="profile-badges-grid">
+        {(state.inventory?.owned || []).map((itemId) => {
+          const isEquipped = state.inventory.equipped.includes(itemId);
+          return (
+            <div key={itemId} className="card p-4">
+              <h4>{itemId}</h4>
+              <button
+                type="button"
+                className={`btn ${isEquipped ? 'btn-ghost' : 'btn-primary'}`}
+                onClick={() => isEquipped ? unequipItem(itemId) : equipItem(itemId)}
+              >
+                {isEquipped ? 'Unequip' : 'Equip'}
+              </button>
+            </div>
+          );
+        })}
+        {(state.inventory?.owned || []).length === 0 && <p>No items owned.</p>}
+      </div>
+
       {/* COMPLETED MISSIONS LIST */}
       <h2 className="profile-section-title">{t('profile.sections.completedMissions')}</h2>
       <div

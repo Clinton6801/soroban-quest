@@ -72,6 +72,24 @@ export const GameStateProvider = ({ children }) => {
     return nextProfile;
   }, [refreshActiveState]);
 
+  const equipItem = useCallback((itemId) => {
+    const newProgress = { ...progress };
+    if (!newProgress.inventory.owned.includes(itemId)) return;
+    
+    // Simple logic: limit to 3 equipped items? Or maybe just add it?
+    // Requirement doesn't say limit.
+    if (!newProgress.inventory.equipped.includes(itemId)) {
+      newProgress.inventory.equipped.push(itemId);
+      updateProgress(newProgress);
+    }
+  }, [progress, updateProgress]);
+
+  const unequipItem = useCallback((itemId) => {
+    const newProgress = { ...progress };
+    newProgress.inventory.equipped = newProgress.inventory.equipped.filter(id => id !== itemId);
+    updateProgress(newProgress);
+  }, [progress, updateProgress]);
+
   const resetProgress = useCallback(() => {
     setIsResetConfirmOpen(true);
     return new Promise((resolve) => {
@@ -113,6 +131,8 @@ export const GameStateProvider = ({ children }) => {
         updateProfile,
         switchProfile,
         createProfile,
+        equipItem,
+        unequipItem,
         resetProgress,
       }}
     >
