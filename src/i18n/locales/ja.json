@@ -84,6 +84,14 @@
     "done": "完了",
     "noResults": "条件に合致するミッションが見つかりません。"
   },
+  "theoryQuest": {
+    "submit": "回答を送信",
+    "correct": "正解！",
+    "incorrect": "残念、不正解です。",
+    "correctToast": "回答は正解です！",
+    "incorrectToast": "もう一度挑戦してください — 解説を確認しましょう。",
+    "completed": "この理論クエストは既に完了しています。"
+  },
   "home": {
     "badge": "✨ セットアップ不要 • ウォレット不要 • オープンソース",
     "title": {
@@ -416,6 +424,10 @@
     "editor": {
       "reset": "↺ リセット",
       "hint": "💡 ヒント",
+      "goldHint": "🪙 ヒント（{{cost}} ゴールド）",
+      "goldHintTitle": "{{cost}} ゴールドを使って次のヒントをすぐに表示",
+      "goldHintInsufficient": "ゴールドが不足しています — このヒントのアンロックには {{cost}} 必要です",
+      "goldHintUnlocked": "🪙 ヒント（アンロック済み）",
       "solution": "👁️ 解答",
       "run": "▶ テスト実行",
       "running": "実行中…",
@@ -441,10 +453,36 @@
       "allPassing": "{{passed}}/{{total}} チェック成功 ✓",
       "note": "ライブチェック · テスト実行時にフルスイート"
     },
+    "securityNotes": {
+      "title": "セキュリティノート",
+      "advisory": "これらは参考情報です。ミッションの完了を妨げるものではありません。",
+      "count": "{{count}}",
+      "line": "{{line}} 行目",
+      "rules": {
+        "missingAuth": {
+          "title": "状態変更前の認可チェックが不足",
+          "body": "{{functionName}} は require_auth() を呼び出さずにストレージへ書き込んでいます。"
+        },
+        "uncheckedArithmetic": {
+          "title": "トークン数量に対する未チェックの演算",
+          "body": "{{functionName}} はトークン数量に対してチェックなしのラップ演算または乗算を行っています。"
+        },
+        "reentrancy": {
+          "title": "状態書き込み前の外部呼び出し",
+          "body": "{{functionName}} はストレージへの書き込み前に外部呼び出しを行っています。先に状態を更新してください。"
+        },
+        "storageUnwrap": {
+          "title": "ストレージ読み取りで unwrap を使用",
+          "body": "{{functionName}} はユーザー指定のキーに対するストレージ取得を unwrap しています。値が存在しない場合にパニックします。"
+        }
+      }
+    },
     "toasts": {
       "validated": "ミッションパラメータが検証されました！",
       "validationFailed": "検証失敗。ターミナルを確認してください。",
       "hintUnlocked": "ヒント {{index}} がアンロック",
+      "hintGoldUnlocked": "ヒント {{index}} を {{cost}} ゴールドでアンロックしました",
+      "hintInsufficientGold": "ゴールドが不足しています — このヒントのアンロックには {{cost}} 必要です",
       "codeReset": "コードをテンプレートにリセット",
       "solutionLoaded": "解答をエディターに読み込み"
     },
