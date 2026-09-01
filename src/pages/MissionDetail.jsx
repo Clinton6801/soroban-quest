@@ -7,6 +7,7 @@ import { runTests } from "../systems/testRunner";
 import { loadProgress, saveProgress } from "../systems/storage";
 import { completeMission, recordAttempt, spendGoldForHint, isHintGoldUnlocked, HINT_GOLD_COST } from "../systems/gameEngine";
 import { logActivity, ACTIVITY_TYPES } from "../systems/activityLogger";
+import { playSound, SOUND_TYPES } from "../systems/soundManager";
 import MissionDetailSkeleton from "../components/MissionDetailSkeleton";
 import { useOkashi, TOAST_STATES } from "../systems/useokashi";
 import { createDebouncedValidator, SECURITY_MARKER_SOURCE } from "../systems/liveValidator";
@@ -73,8 +74,8 @@ export default function MissionDetail() {
   });
 
   const terminalBodyRef = useRef(null);
-  const editorRef = useRef(null);      
-  const monacoRef = useRef(null);      
+  const editorRef = useRef(null);
+  const monacoRef = useRef(null);
   const validatorRef = useRef(null);
   const victoryModalRef = useRef(null);
   const compilerRef = useRef(null);
@@ -210,6 +211,9 @@ export default function MissionDetail() {
         });
       }
     } else {
+
+      playSound(SOUND_TYPES.ERROR);
+
       if (showToast) showToast(t("missionDetail.toasts.validationFailed"), "error");
     }
 
@@ -306,14 +310,14 @@ export default function MissionDetail() {
       // Prevent running if user is typing inside code fields or inputs
       const targetTag = document.activeElement?.tagName.toLowerCase();
       const isMonacoFocused = document.activeElement?.closest('.monaco-editor');
-      
+
       if (
-        targetTag === "input" || 
-        targetTag === "textarea" || 
+        targetTag === "input" ||
+        targetTag === "textarea" ||
         document.activeElement?.isContentEditable ||
         isMonacoFocused
       ) {
-        return; 
+        return;
       }
 
       const key = e.key.toLowerCase();
@@ -340,7 +344,7 @@ export default function MissionDetail() {
     const modalElement = victoryModalRef.current;
     const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
     const focusableElements = modalElement.querySelectorAll(focusableSelectors);
-    
+
     if (focusableElements.length === 0) return;
 
     const firstElement = focusableElements[0];
@@ -669,9 +673,9 @@ export default function MissionDetail() {
 
       <div id="main-content" className={`mission-detail active-tab-${activeTab}`}>
         {/* ---------------- Story Panel ---------------- */}
-        <div 
-          className="mission-story" 
-          role="region" 
+        <div
+          className="mission-story"
+          role="region"
           aria-label="Mission briefing and story description"
         >
           <div style={{ marginBottom: "var(--space-md)" }}>
@@ -707,9 +711,9 @@ export default function MissionDetail() {
         </div>
 
         {/* ---------------- Editor Panel ---------------- */}
-        <div 
-          className="mission-editor-panel" 
-          role="region" 
+        <div
+          className="mission-editor-panel"
+          role="region"
           aria-label="Code submission workspace"
         >
           <div className="mission-editor-toolbar">
@@ -905,9 +909,9 @@ export default function MissionDetail() {
         </div>
 
         {/* ---------------- Terminal Panel ---------------- */}
-        <div 
-          className="mission-terminal-panel" 
-          role="region" 
+        <div
+          className="mission-terminal-panel"
+          role="region"
           aria-label="Validation execution test terminal log terminal"
         >
           <div className="terminal" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -940,15 +944,15 @@ export default function MissionDetail() {
 
         {/* ---------------- Replay Panel ---------------- */}
         {(isCompleted || showVictory) && hasReplay && (
-          <div 
-            className="mission-replay-panel" 
+          <div
+            className="mission-replay-panel"
             style={{
               padding: '2rem',
               textAlign: 'center',
               background: 'var(--bg-secondary)',
               borderTop: '1px solid var(--border-subtle)'
-            }} 
-            role="region" 
+            }}
+            role="region"
             aria-label="Problem solving archive replay tools"
           >
             <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>
@@ -1015,9 +1019,9 @@ export default function MissionDetail() {
             {/* Victory CodeReplay Integration Trigger Trigger Button */}
             {hasReplay && (
               <div style={{ marginBottom: "1.25rem" }}>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-secondary"
                   onClick={() => {
                     setShowVictory(false);
                     handleWatchReplay();

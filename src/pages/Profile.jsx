@@ -15,6 +15,13 @@ import {
 import { getXPProgress, BADGES } from '../systems/gameEngine';
 import { getAllMissions } from '../systems/missionLoader';
 import { avatars } from '../data/avatars';
+import {
+  getVolume,
+  setVolume,
+  isMuted,
+  setMuted,
+  playClick,
+} from '../systems/soundManager';
 
 // Hooks and Utilities
 import { useToast } from '../systems/ToastContext';
@@ -64,6 +71,8 @@ export default function Profile() {
   const rankIndex = Math.min(Math.max(state.level - 1, 0), MAX_RANK_INDEX);
   const rankTitle = t(`ranks.${rankIndex}`);
   const missions = getAllMissions(language);
+  const [soundVolume, setSoundVolume] = useState(() => getVolume());
+  const [soundMuted, setSoundMuted] = useState(() => isMuted());
 
   // Combined result if the player chooses to merge the imported backup with
   // their current on-device progress (shown in the import preview modal).
@@ -142,7 +151,7 @@ export default function Profile() {
     const statusMsg = t('profile.data.status.exported');
     setImportStatus(statusMsg);
 
-    showToast('Progress configuration data exported!', 'success');
+    playClick();
     showToast(statusMsg, 'success');
     logActivity(ACTIVITY_TYPES.EXPORT, {}, t('profile.data.log.exported'));
 
@@ -253,6 +262,19 @@ export default function Profile() {
       showToast(resetMsg, 'warning');
       setTimeout(() => setImportStatus(''), 3000);
     }
+  };
+
+  const handleSoundMute = () => {
+    const nextMuted = !soundMuted;
+    setMuted(nextMuted);
+    setSoundMuted(nextMuted);
+    if (!nextMuted) playClick();
+  };
+
+  const handleVolumeChange = (e) => {
+    const nextVolume = Number(e.target.value);
+    setVolume(nextVolume);
+    setSoundVolume(nextVolume);
   };
 
   const completedMissions = missions.filter((m) => state.completedMissions.includes(m.id));
@@ -521,6 +543,53 @@ export default function Profile() {
           ))
         )}
       </div>
+
+      {/* SOUND SETTINGS */}
+      <section className="card profile-sound-card" aria-labelledby="sound-settings-heading">
+        <div className="profile-space-between">
+          <div>
+            <h3 id="sound-settings-heading" className="profile-section-title profile-sound-title" style={{ marginBottom: 0 }}>
+              Sound Settings
+            </h3>
+
+            <p className="profile-selector-help profile-sound-description">
+              Adjust game sound effects and audio feedback.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={handleSoundMute}
+            aria-pressed={soundMuted}
+          >
+            {soundMuted ? '🔇 Sound Off' : '🔊 Sound On'}
+          </button>
+        </div>
+
+        <div className="profile-sound-volume">
+          <label
+            htmlFor="sound-volume"
+            className="profile-sound-volume-label"
+          >
+            <span className="profile-sound-volume-name">Volume</span>
+            <span className="profile-sound-volume-value">{Math.round(soundVolume * 100)}%</span>
+          </label>
+
+          <input
+            id="sound-volume"
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={soundVolume}
+            onChange={handleVolumeChange}
+            disabled={soundMuted}
+            style={{ width: '100%' }}
+            aria-label="Sound volume"
+          />
+        </div>
+      </section>
 
       <div className="card profile-sync-card">
         <div className="profile-space-between">

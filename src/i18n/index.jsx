@@ -16,6 +16,7 @@ import es from './locales/es.json';
 import fr from './locales/fr.json';
 import zhCN from './locales/zh-CN.json';
 import { setActiveLanguage } from './languageBridge.js';
+import './i18n.css';
 
 const LOCALES = { en, es, fr, 'zh-CN': zhCN };
 const SUPPORTED = ['en', 'es', 'fr', 'zh-CN'];
